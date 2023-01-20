@@ -1,14 +1,24 @@
-export default function upperLine(content, symbol) {
+export default function upperLine({ content, symbol, matches }) {
     let parsedContent = content;
+    let addingDifference = 0;
 
-    const matches = parsedContent.match(symbol.pattern) || [];
+    matches.forEach(match => {
+        const tag = `<${symbol.tag}>${match.md}</${symbol.tag}>{delete}`;
+        const realPosition = match.position + addingDifference;
+
+        parsedContent = parsedContent.substring(0, realPosition) + tag + parsedContent.substring(realPosition);
+        addingDifference += tag.length;
+    });
+
+    const matchesPattern = "{delete}.+";
+    const removeMatches = new RegExp(matchesPattern, "gm");
+
+    parsedContent = parsedContent.replace(removeMatches, "");
+
+    const pattern = `^${symbol.md}{1,}(?=<br>)`;
+    const removeMd = new RegExp(pattern, "gm");
     
-    matches.forEach(match => parsedContent = parsedContent.replace(match, `<${symbol.tag}>${match}</${symbol.tag}>`));
-
-    //parsedContent = parsedContent.replace(/^(=|-){1,}/gm, "");
-    const regex = new RegExp(`^${matches[0][0]}{1,}`, "gm");
-    console.log(regex)
-    parsedContent = parsedContent.replace(regex, "")
+    parsedContent = parsedContent.replace(removeMd, "");
 
     return parsedContent;
 }
