@@ -9,7 +9,8 @@ const Syntax = {
     ],
 
     multipleLines: [
-        { tag: "blockquote", md: ">" }
+        { tag: "blockquote", md: ">" },
+        { tag: "b", md: "\\*\\*>" }
     ],
     
     upperLine: [
@@ -33,6 +34,7 @@ const Syntax = {
 export const SyntaxPatterns = {
     list: {
         oneLine: "^{md}\\s+|(?<=^{md}\\s+.+)<br>\\n",
+        multipleLines: "^{md}.+",
         upperLine: ".+(?=<br>\\n^{md}{1,}<br>)",
         classic: "{md}(?=.+{md})(?!(\\s+)?{md})|(?<={md}.+)(?<!{md}(\\s+)?){md}"
     },
