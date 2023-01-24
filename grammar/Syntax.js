@@ -5,14 +5,14 @@ const Syntax = {
         { tag: "h3", md: "###" },
         { tag: "h4", md: "####" },
         { tag: "h5", md: "#####" },
-        { tag: "h6", md: "######" }
+        { tag: "h6", md: "######" },
     ],
 
     multipleLines: [
         { tag: "blockquote", md: ">" },
         // NXTLVL:
-        { tag: "b", md: "\\*\\*>" },
-        { tag: "i", md: "\\*>" }
+        //{ tag: "b", md: "\\*\\*" },
+        //{ tag: "i", md: "\\*" }
     ],
     
     upperLine: [
@@ -36,7 +36,7 @@ const Syntax = {
 export const SyntaxPatterns = {
     list: {
         oneLine: "^{md}\\s+|(?<=^{md}\\s+.+)<br>\\n",
-        multipleLines: "(?!^{md}(\\s+)?<br>)^{md}.+|(?<=^{md}\\s*<br>\\n)[\\s\\S]+(?=^{md}\\s*)",
+        multipleLines: "(?!^{md}(\\s+)?<br>)^{md}.+",
         upperLine: ".+(?=<br>\\n^{md}{1,}<br>)",
         classic: "{md}(?=.+{md})(?!(\\s+)?{md})|(?<={md}.+)(?<!{md}(\\s+)?){md}"
     },
@@ -59,6 +59,58 @@ export const SyntaxPatterns = {
 
         pattern = pattern.replace(/{md}/g, symbol.md);
         return pattern;
+    },
+
+    getSyntax(params) {
+        const { group, tag, md } = params;
+        const target = { group: [], search: [] };
+
+        if(group) Object.keys(Syntax).forEach((key, index) => {
+            if(group === key) target.group = Object.values(Syntax)[index];
+        });
+
+        if(group && target.group.length === 0) return;
+        const groupParam = target.group.length !== 0;
+
+        if(groupParam) search(target.group);
+        else Object.values(Syntax).forEach(syntaxObjects => search(syntaxObjects));
+
+        const result = [];
+
+        target.search.forEach(s => {
+            let newS = {};
+            const removeBackslash = /\\+/g;
+
+            newS = {...s, md: s.md.replace(removeBackslash, "")};
+            result.push(newS);
+        });
+
+        if(result.length === 1) return result[0];
+        return result;
+
+        function search(syntaxObjects) {
+            syntaxObjects.forEach(syntaxObject => {
+                const results = [];
+
+                const removeBackslash = /\\+/g;
+                const clearMd = syntaxObject.md.replace(removeBackslash, "");
+                
+                switch(true) {
+                    case typeof tag === "string" && typeof md === "string":
+                        if(syntaxObject.tag === tag && clearMd === md) results.push(syntaxObject);
+                        break;
+                    case typeof tag === "string":
+                        if(syntaxObject.tag === tag) results.push(syntaxObject);
+                        break;
+                    case typeof md === "string":
+                        if(clearMd === md) results.push(syntaxObject);
+                        break;
+                    default: results.push(syntaxObject);
+                }
+
+                if(results.length > 0) target.search.push(...results);
+            });
+        }
     }
 };
 

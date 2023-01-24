@@ -4,8 +4,6 @@ export default function multipleLines({ content, symbol, matches }) {
     const pairs = [];
     let pairTemplate = {};
 
-    console.log(matches)
-
     matches.forEach((match, index) => {
         const eol = match.position + match.md.length;
         const nextMatch = matches[index + 1];
@@ -30,10 +28,8 @@ export default function multipleLines({ content, symbol, matches }) {
         addingDifference += tags.opened.length + tags.closed.length;
     });
 
-    const pattern = `((?<=<${symbol.tag}>)${symbol.md}|^${symbol.md})(\\s+)?(<br>)?`;
+    const pattern = `((?<=<${symbol.tag}>)${symbol.md}|^${symbol.md})`;
     const removeMd = new RegExp(pattern, "gm");
-
-    console.log([...parsedContent.matchAll(removeMd)])
 
     parsedContent = parsedContent.replace(removeMd, "");
 
