@@ -1,5 +1,3 @@
-import { SyntaxPatterns } from "../../Syntax.js";
-
 export default function upperLine({ content, symbol, matches }) {
     let parsedContent = content;
     let addingDifference = 0;
@@ -12,32 +10,13 @@ export default function upperLine({ content, symbol, matches }) {
         addingDifference += tag.length;
     });
 
-    const matchesPattern = "{delete}.+";
+    const matchesPattern = "{delete}.+(?=<br>)";
     const removeMatches = new RegExp(matchesPattern, "gm");
 
     parsedContent = parsedContent.replace(removeMatches, "");
 
-    const pattern = `^${symbol.md}{1,}(?=<br>)`;
+    const pattern = `(?<=.+<br>\\n)^${symbol.md}+<br>`;
     const removeMd = new RegExp(pattern, "gm");
-    
-    const removeMdMatches = [...parsedContent.matchAll(removeMd)];
-
-    const upperLineSyntax = SyntaxPatterns.getSyntax({ group: "upperLine" });
-    const ignoreSymbols = [];
-
-    upperLineSyntax.forEach(symbol => ignoreSymbols.push(symbol.md));
-
-    removeMdMatches.forEach(match => {
-        if(match.index === 0) return;
-        let stop = false;
-
-        for(let i = match.index - 6; i >= 0; i--) if(!stop) {
-            if(!parsedContent[i]) stop = true;
-
-
-        }
-    });
-
 
     parsedContent = parsedContent.replace(removeMd, "");
 
