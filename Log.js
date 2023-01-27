@@ -4,7 +4,8 @@ const logs = {
     },
 
     warns: {
-        noContent: "Content is not defined.\nTo define the content you can:\n1. Provide the content as the first parameter of the NXTLVL class (new NXTLVL(content)).\n2. Provide the content as the first parameter of the md method (.md(content))."
+        noContent: "Content is not defined.\nTo define the content you can:\n1. Provide the content as the first parameter of the NXTLVL class (new NXTLVL(content)).\n2. Provide the content as the first parameter of the md method (.md(content)).",
+        unnecessaryBlocks: "Unnecessary block: {block}.\nIt is unnecessary to nest blocks of the same type."
     }
 };
 
@@ -21,15 +22,15 @@ function warn(id, props) {
 
 function log(type, id, props) {
     const targetIds = type === "error" ? logs.errors : logs.warns;
-    let targetValue = null;
+    let target = { id: "", content: "" };
 
     Object.keys(targetIds).forEach((key, index) => {
-        if(id === key) targetValue = Object.values(targetIds)[index];
+        if(id === key) target = { id, content: Object.values(targetIds)[index] };
     });
 
-    return logFunction(targetValue);
+    return logFunction(target);
 
-    function logFunction(content) {
+    function logFunction({ id, content }) {
         let validContent = content;
         const logProps = propFinder();
 
@@ -45,7 +46,7 @@ function log(type, id, props) {
             if(prop) validContent = validContent.replaceAll(`{${logProp}}`, prop);
         });
 
-        const logContent = `NTLVL.md ${type === "error" ? "Error" : "Warning"}: ${validContent}`;
+        const logContent = `NTLVL.md ${type === "error" ? "Error" : "Warning"}: ${validContent} (${id})`;
         type === "error" ? console.error(logContent) : console.warn(logContent);
 
         const logContentHTML = logContent.replaceAll("\n", "<br>");
