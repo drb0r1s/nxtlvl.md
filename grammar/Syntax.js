@@ -24,6 +24,8 @@ const Syntax = {
         { tag: "h5", md: "\\*" },
         { tag: "h6", md: "\\." }
     ],
+
+    //listing: [],
     
     classic: [
         { tag: "b", md: "\\*\\*" },
@@ -35,8 +37,8 @@ const Syntax = {
 
 export const SyntaxPatterns = {
     list: {
-        oneLine: "^{md}\\s+|(?<=^{md}\\s+.+)<br>\\n",
-        multipleLines: "(?!^{md}\\s+<br>)^{md}\\s+.+|^\\({md}(\\s+)?<br>|^{md}\\)(\\s+)?<br>",
+        oneLine: "((?<=^>(\\s+)?)#{1,6}|^{md})\\s+|(?<=(^>(\\s+)?#{1,6}|^{md})\\s+.+)<br>\\n",
+        multipleLines: "(?!^{md}\\s+<br>)(^>(?=<h\\d>)|^{md}(?=\\s+))\s*.+|^\\({md}(\\s+)?<br>|^{md}\\)(\\s+)?<br>",
         upperLine: ".+(?=<br>\\n^{md}+<br>)",
         classic: "{md}(?=.+{md})(?!(\\s+)?{md})|(?<={md}.+)(?<!{md}(\\s+)?){md}"
     },

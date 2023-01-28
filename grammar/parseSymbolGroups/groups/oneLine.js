@@ -1,5 +1,3 @@
-import { SyntaxPatterns } from "../../Syntax.js";
-
 export default function oneLine({ content, symbol, matches }) {
     let parsedContent = content;
     let addingDifference = 0;
@@ -12,7 +10,7 @@ export default function oneLine({ content, symbol, matches }) {
         addingDifference += tag.length;
     });
 
-    const pattern = `(?<=^<${symbol.tag}>)${SyntaxPatterns.getPattern("oneLine", symbol).split("|")[0].substring(1)}`;
+    const pattern = `(?<=(>(\\s+)?<${symbol.tag}>|^<${symbol.tag}>))${symbol.md}+(\\s+)?`;
     const removeMd = new RegExp(pattern, "gm");
 
     parsedContent = parsedContent.replace(removeMd, "");

@@ -20,9 +20,11 @@ export default function multipleLines({ content, symbol, matches }) {
     unnecessaryBlocksCheck();    
 
     const patterns = {
-        classicMd: `(?<=<${symbol.tag}>)${symbol.md}\\s+(?!<br>)|^${symbol.md}\\s+(?!<br>)`,
+        classicMd: `(?<=<${symbol.tag}>)${symbol.md}${symbol.tag === "blockquote" ? "(?=<h\\d>|\\s+)" : ""}\\s*(?!<br>)|^${symbol.md}\\s+(?!<br>)`,
         nxtlvlMd: `(?<=<${symbol.tag}>)\\(${symbol.md}(\\s+)?<br>|(?<=<\\/${symbol.tag}>)${symbol.md}\\)(\\s+)?<br>`
     };
+
+    console.log(patterns.classicMd)
 
     const remove = {
         classicMd: new RegExp(patterns.classicMd, "gm"),
