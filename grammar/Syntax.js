@@ -38,7 +38,7 @@ const Syntax = {
 export const SyntaxPatterns = {
     list: {
         oneLine: "((?<=^>(\\s+)?)#{1,6}|^{md})\\s+|(?<=(^>(\\s+)?#{1,6}|^{md})\\s+.+)<br>\\n",
-        multipleLines: "(?!^{md}\\s+<br>)(^>(?=<h\\d>)|^{md}(?=\\s+))\s*.+|^\\({md}(\\s+)?<br>|^{md}\\)(\\s+)?<br>",
+        multipleLines: "(?!^{md}\\s+<br>)(^>(?=<h\\d>)|^{md}(?=\\s+))\\s*.+|^\\({md}(\\s+)?<br>|^{md}\\)(\\s+)?<br>",
         upperLine: ".+(?=<br>\\n^{md}+<br>)",
         classic: "{md}(?=.+{md})(?!(\\s+)?{md})|(?<={md}.+)(?<!{md}(\\s+)?){md}"
     },

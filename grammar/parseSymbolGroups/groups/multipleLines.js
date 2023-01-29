@@ -17,14 +17,14 @@ export default function multipleLines({ content, symbol, matches }) {
     addPairs(pairs);
     addSpecialPairs(specialPairs);
 
+    addNestedBlockquotes();
+
     unnecessaryBlocksCheck();    
 
     const patterns = {
         classicMd: `(?<=<${symbol.tag}>)${symbol.md}${symbol.tag === "blockquote" ? "(?=<h\\d>|\\s+)" : ""}\\s*(?!<br>)|^${symbol.md}\\s+(?!<br>)`,
         nxtlvlMd: `(?<=<${symbol.tag}>)\\(${symbol.md}(\\s+)?<br>|(?<=<\\/${symbol.tag}>)${symbol.md}\\)(\\s+)?<br>`
     };
-
-    console.log(patterns.classicMd)
 
     const remove = {
         classicMd: new RegExp(patterns.classicMd, "gm"),
@@ -103,6 +103,48 @@ export default function multipleLines({ content, symbol, matches }) {
         }
 
         return specialPairs.reverse();
+    }
+
+    function addNestedBlockquotes() {
+        if(symbol.md !== ">") return;
+
+        const pattern = /(?<=(<blockquote>>|^>))[\s+>]+\s+.+<br>/gm;
+        
+        const nestedBlockquotes = {
+            matches: [...parsedContent.matchAll(pattern)],
+            addingDifference: 0
+        };
+
+        nestedBlockquotes.matches.forEach(match => {
+            const string = match[0];
+            const position = { start: match.index + nestedBlockquotes.addingDifference, end: match.index + string.length - 4 + nestedBlockquotes.addingDifference };
+            const tags = getNestedTags(string);
+
+            parsedContent = parsedContent.substring(0, position.start) + tags.opened + parsedContent.substring(position.start, position.end) + tags.closed + parsedContent.substring(position.end);
+            nestedBlockquotes.addingDifference += tags.opened.length + tags.closed.length;
+        });
+
+        function getNestedTags(string) {
+            let result = 0;
+            let checkStatus = true;
+            let i = 0;
+
+            while(checkStatus) {
+                if(string[i] === ">") result++;
+                
+                if(string[i] !== ">" && string[i] !== " ") checkStatus = false;
+                else i++;
+            }
+
+            const tags = { opened: "", closed: "" };
+
+            for(let i = 0; i < result; i++) {
+                tags.opened += "<blockquote>";
+                tags.closed += "</blockquote>";
+            }
+
+            return tags;
+        }
     }
 
     function unnecessaryBlocksCheck() {
