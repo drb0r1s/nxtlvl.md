@@ -18,7 +18,6 @@ export default function multipleLines({ content, symbol, matches }) {
     addSpecialPairs(specialPairs);
 
     addNestedBlockquotes();
-
     unnecessaryBlocksCheck();    
 
     const patterns = {
@@ -117,12 +116,15 @@ export default function multipleLines({ content, symbol, matches }) {
 
         nestedBlockquotes.matches.forEach(match => {
             const string = match[0];
-            const position = { start: match.index + nestedBlockquotes.addingDifference, end: match.index + string.length - 4 + nestedBlockquotes.addingDifference };
+            const position = { start: match.index + nestedBlockquotes.addingDifference, end: match.index + string.length + nestedBlockquotes.addingDifference };
             const tags = getNestedTags(string);
 
             parsedContent = parsedContent.substring(0, position.start) + tags.opened + parsedContent.substring(position.start, position.end) + tags.closed + parsedContent.substring(position.end);
             nestedBlockquotes.addingDifference += tags.opened.length + tags.closed.length;
         });
+
+        const removeNestedBlockquotesMd = /^>(?=<blockquote>)|(?<=<blockquote>)[\s>]+/gm;
+        parsedContent = parsedContent.replaceAll(removeNestedBlockquotesMd, "");
 
         function getNestedTags(string) {
             let result = 0;
