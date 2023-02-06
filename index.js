@@ -19,6 +19,14 @@ export default class NXTLVL {
         return this.#parse();
     }
 
+    injectMd() {
+        
+    }
+
+    style() {
+        
+    }
+
     #parse() {
         if(typeof this.content !== "string") return Log.error("invalidContentType", typeof this.content);
         return parser(this.content);

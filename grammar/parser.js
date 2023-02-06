@@ -1,14 +1,10 @@
-import Syntax from "./Syntax.js";
-import parseSymbolGroups from "./parseSymbolGroups/index.js";
+import parseSymbolGroups from "./symbolGroups/parseSymbolGroups.js";
 
 export default function parser(content) {
     let parsedContent = content;
+    
     whitespacesConfig();
-
-    Object.keys(Syntax).forEach((key, index) => {
-        const symbols = Object.values(Syntax)[index];
-        if(Array.isArray(symbols)) symbols.forEach(symbol => { parsedContent = parseSymbolGroups(parsedContent, key, symbol) });
-    });
+    parsedContent = parseSymbolGroups(parsedContent);
 
     parsedContent = parsedContent.replaceAll("<br>\n", "<br>");
     

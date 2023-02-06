@@ -1,114 +1,126 @@
 const Syntax = {
-    oneLine: [
-        { tag: "h1", md: "#" },
-        { tag: "h2", md: "##" },
-        { tag: "h3", md: "###" },
-        { tag: "h4", md: "####" },
-        { tag: "h5", md: "#####" },
-        { tag: "h6", md: "######" },
-    ],
-
-    multipleLines: [
-        { tag: "blockquote", md: ">" },
-        // NXTLVL:
-        { tag: "b", md: "\\*\\*" },
-        { tag: "i", md: "\\*" }
-    ],
+    groups: {
+        oneLine: [
+            { tag: "h1", md: "#" },
+            { tag: "h2", md: "##" },
+            { tag: "h3", md: "###" },
+            { tag: "h4", md: "####" },
+            { tag: "h5", md: "#####" },
+            { tag: "h6", md: "######" },
+        ],
     
-    upperLine: [
-        { tag: "h1", md: "=" },
-        { tag: "h2", md: "-" },
-        // NXTLVL:
-        { tag: "h3", md: "_" },
-        { tag: "h4", md: "\\+" },
-        { tag: "h5", md: "\\*" },
-        { tag: "h6", md: "\\." }
-    ],
-
-    //listing: [],
+        multipleLines: [
+            { tag: "blockquote", md: ">" },
+            // NXTLVL:
+            { tag: "b", md: "\\*\\*" },
+            { tag: "i", md: "\\*" }
+        ],
+        
+        upperLine: [
+            { tag: "h1", md: "=" },
+            { tag: "h2", md: "-" },
+            // NXTLVL:
+            { tag: "h3", md: "_" },
+            { tag: "h4", md: "\\+" },
+            { tag: "h5", md: "\\*" },
+            { tag: "h6", md: "\\." }
+        ],
     
-    classic: [
-        { tag: "b", md: "\\*\\*" },
-        { tag: "b", md: "__" },
-        { tag: "i", md: "\\*" },
-        { tag: "i", md: "_" },
-        { tag: "span", md: "%" }
-    ]
-};
-
-export const SyntaxPatterns = {
-    list: {
-        oneLine: "((?<=^>(\\s+)?)#{1,6}|^{md})\\s+|(?<=(^>(\\s+)?#{1,6}|^{md})\\s+.+)<br>\\n",
-        multipleLines: "(?!^{md}\\s+<br>)(^>(?=<h\\d>|>+)|^{md}(?=\\s+))\\s*.+|^\\({md}(\\s+)?<br>|^{md}\\)(\\s+)?<br>",
-        upperLine: ".+(?=<br>\\n^{md}+<br>)",
-        classic: "{md}(?=.+{md})(?!(\\s+)?{md})|(?<={md}.+)(?<!{md}(\\s+)?){md}"
+        //listing: [],
+        
+        classic: [
+            { tag: "b", md: "\\*\\*" },
+            { tag: "b", md: "__" },
+            { tag: "i", md: "\\*" },
+            { tag: "i", md: "_" },
+            { tag: "span", md: "%" }
+        ]
     },
 
-    match: (content, symbolGroup, symbol) => {
-        const pattern = SyntaxPatterns.getPattern(symbolGroup, symbol);
+    patterns: {
+        oneLine: "((?<=^>(\\s+)?)#{1,6}|^{md})\\s+|(?<=(^>(\\s+)?#{1,6}|^{md})\\s+.+)<br>",
+        multipleLines: "(?!^{md}\\s+<br>)(^>(?=(?=<h\\d.+)\">|>+)|^{md}(?=\\s+))\\s*.+|^\\({md}(\\s+)?<br>|^{md}\\)(\\s+)?<br>",
+        upperLine: ".+(?=<br>\\n^{md}+<br>)",
+        classic: "{md}(?=.+{md})(?!(\\s+)?{md})|(?<={md}.+)(?<!{md}(\\s+)?){md}",
+        
+        get: (params = {}) => {
+            const { group, tag, md } = params;
+            const target = { patterns: {}, results: {} };
+
+            Object.keys(Syntax.patterns).forEach((key, index) => {
+                const pattern = Object.values(Syntax.patterns)[index];
+                if(typeof pattern !== "string") return;
+                
+                if(group && (group === key)) target.patterns = { [group]: pattern };
+                else if(!group) target.patterns = {...target.patterns, [key]: pattern};
+            });
+
+            Object.keys(target.patterns).forEach((key, index) => {
+                const pattern = Object.values(target.patterns)[index];
+                const symbols = Syntax.search({ group: key, tag, md });
+
+                if(symbols.length === 0) return;
+
+                const patterns = [];
+
+                symbols.forEach(symbol => {
+                    let parsedPattern = pattern;
+                    parsedPattern = parsedPattern.replace(/{md}/g, symbol.md);
+
+                    patterns.push(parsedPattern);
+                });
+
+                target.results = {...target.results, [key]: patterns};
+            });
+
+            return target.results;
+        }
+    },
+
+    match: (content, symbol, pattern) => {
+        const matches = [];
         const regex = new RegExp(pattern, "gm");
 
         const advancedMatches = [...content.matchAll(regex)];
-
-        const matches = [];
-        advancedMatches.forEach(advancedMatch => matches.push({ md: advancedMatch[0], position: advancedMatch.index }));
+        advancedMatches.forEach(advancedMatch => matches.push({...symbol, md: advancedMatch[0], position: advancedMatch.index}));
 
         return matches;
     },
 
-    getPattern: (symbolGroup, symbol) => {
-        let pattern = "";
-        Object.keys(SyntaxPatterns.list).forEach((key, index) => { if(symbolGroup === key) pattern = Object.values(SyntaxPatterns.list)[index] });
-
-        pattern = pattern.replace(/{md}/g, symbol.md);
-        return pattern;
-    },
-
-    getSyntax(params) {
+    search: (params = {}) => {
         const { group, tag, md } = params;
         const target = { group: [], search: [] };
 
-        if(group) Object.keys(Syntax).forEach((key, index) => {
-            if(group === key) target.group = Object.values(Syntax)[index];
+        if(group) Object.keys(Syntax.groups).forEach((key, index) => {
+            if(group === key) target.group = Object.values(Syntax.groups)[index];
         });
 
         if(group && target.group.length === 0) return;
         const groupParam = target.group.length !== 0;
 
         if(groupParam) search(target.group);
-        else Object.values(Syntax).forEach(syntaxObjects => search(syntaxObjects));
+        else Object.values(Syntax.groups).forEach(symbols => search(symbols));
 
-        const result = [];
+        return target.search;
 
-        target.search.forEach(s => {
-            let newS = {};
-            const removeBackslash = /\\+/g;
-
-            newS = {...s, md: s.md.replace(removeBackslash, "")};
-            result.push(newS);
-        });
-
-        if(result.length === 1) return result[0];
-        return result;
-
-        function search(syntaxObjects) {
-            syntaxObjects.forEach(syntaxObject => {
+        function search(symbols) {
+            symbols.forEach(symbol => {
                 const results = [];
 
                 const removeBackslash = /\\+/g;
-                const clearMd = syntaxObject.md.replace(removeBackslash, "");
+                const clearMd = symbol.md.replace(removeBackslash, "");
                 
                 switch(true) {
                     case typeof tag === "string" && typeof md === "string":
-                        if(syntaxObject.tag === tag && clearMd === md) results.push(syntaxObject);
+                        if(symbol.tag === tag && clearMd === md) results.push(symbol);
                         break;
                     case typeof tag === "string":
-                        if(syntaxObject.tag === tag) results.push(syntaxObject);
+                        if(symbol.tag === tag) results.push(symbol);
                         break;
                     case typeof md === "string":
-                        if(clearMd === md) results.push(syntaxObject);
+                        if(clearMd === md) results.push(symbol);
                         break;
-                    default: results.push(syntaxObject);
+                    default: results.push(symbol);
                 }
 
                 if(results.length > 0) target.search.push(...results);
