@@ -41,7 +41,7 @@ const Syntax = {
         oneLine: "((?<=^>(\\s+)?)#{1,6}|^{md})\\s+|(?<=(^>(\\s+)?#{1,6}|^{md})\\s+.+)<br>",
         multipleLines: "(?!^{md}\\s+<br>)(^>(?=(?=<h\\d.+)\">|>+)|^{md}(?=\\s+))\\s*.+|^\\({md}(\\s+)?<br>|^{md}\\)(\\s+)?<br>",
         upperLine: ".+(?=<br>\\n^{md}+<br>)",
-        classic: "(?<!<(b|i) class=\"classic (b|i) )({md}(?=.+{md})(?!(\\s+)?{md}))(?!\">)|(?<!<(b|i) class=\"classic (b|i) )((?<={md}.+)(?<!{md}(\\s+)?){md})(?!\">)",
+        classic: "(?<!<(b|i) class=\"classic (b|i)\\s)({md}(?=.+{md})(?!(\\s+)?{md}))(?!\">)|(?<!<(b|i) class=\"classic (b|i)\\s)((?<={md}.+)(?<!{md}(\\s+)?){md})(?!\">)",
         
         get: (params = {}) => {
             const { group, tag, md } = params;

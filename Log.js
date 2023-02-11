@@ -1,12 +1,14 @@
 const logs = {
     errors: {
-        undefinedParam: "{param} is not defined.",
+        undefinedParam: "{param} param is not defined.",
         invalidContentType: "Invalid content type: {type}. Content must be a string.",
         invalidElementType: "Invalid element type: {type}. Element must be an HTML Element (DOM).",
+        invalidRulesType: "Invalid rules type: {type}. Rules must be an object.",
         noContent: "Content is not defined.\nTo define the content you can:\n1. Provide the content as the first parameter of the NXTLVL class (new NXTLVL(content)).\n2. Provide the content as the first parameter of the md method (.md(content))."
     },
 
     warns: {
+        noStyleTargets: "No targets found for selector \"{selector}\".",
         unnecessaryBlocks: "Unnecessary block: {block}.\nIt is unnecessary to nest blocks of the same type."
     }
 };

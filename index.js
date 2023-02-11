@@ -1,5 +1,6 @@
 import Log from "./Log.js";
 import parser from "./grammar/parser.js";
+import style from "./functions/style.js";
 
 export default class NXTLVL {
     constructor(content = "", settings = {}) {
@@ -13,22 +14,22 @@ export default class NXTLVL {
     }
     
     md(content = "") {
-        if(!this.#contentCheck(content)) return;
-
+        if(!this.#check("content", content)) return;
         return this.#parse();
     }
 
     injectMd(element, content = "") {
-        if(!this.#contentCheck(content)) return;
-
-        if(element === undefined) return Log.error("undefinedParam", "Element");
-        if(element instanceof HTMLElement === false) return Log.error("invalidElementType", typeof element);
-
+        if(!this.#check("content", content)) return;
+        if(!this.#check("element", element)) return;
+        
         element.innerHTML = this.#parse();
     }
 
-    style() {
-        
+    style(element, rules) {
+        if(!this.#check("element", element)) return;
+        if(!this.#check("rules", rules)) return;
+
+        style(element, rules);
     }
     
     config(settings = {}) {
@@ -40,15 +41,45 @@ export default class NXTLVL {
         return parser(this.content);
     }
 
-    #contentCheck(content) {
+    #check(type, param) {
         let result = true;
-        
-        if(!this.content && !content) {
-            Log.error("noContent");
-            result = false;
+
+        switch(type) {
+            case "content":
+                if(!this.content && !param) {
+                    Log.error("noContent");
+                    result = false;
+                }
+                
+                if(param) this.content = param;
+                
+                break;
+            case "element":
+                if(param === undefined) {
+                    Log.error("undefinedParam", "Element");
+                    result = false;
+                }
+
+                else if(param instanceof HTMLElement === false) {
+                    Log.error("invalidElementType", typeof param);
+                    result = false;
+                }
+
+                break;
+            case "rules":
+                if(param === undefined) {
+                    Log.error("undefinedParam", "Rules");
+                    result = false;
+                }
+
+                else if(typeof param !== "object") {
+                    Log.error("invalidRulesType", typeof param);
+                    result = false;
+                }
+
+                break;
+            default: ;
         }
-        
-        if(content) this.content = content;
 
         return result;
     }
