@@ -13,26 +13,43 @@ export default class NXTLVL {
     }
     
     md(content = "") {
-        if(!this.content && !content) return Log.warn("noContent");
-        if(content) this.content = content;
+        if(!this.#contentCheck(content)) return;
 
         return this.#parse();
     }
 
-    injectMd() {
-        
+    injectMd(element, content = "") {
+        if(!this.#contentCheck(content)) return;
+
+        if(element === undefined) return Log.error("undefinedParam", "Element");
+        if(element instanceof HTMLElement === false) return Log.error("invalidElementType", typeof element);
+
+        element.innerHTML = this.#parse();
     }
 
     style() {
         
+    }
+    
+    config(settings = {}) {
+        this.settings = {...this.settings, ...settings};
     }
 
     #parse() {
         if(typeof this.content !== "string") return Log.error("invalidContentType", typeof this.content);
         return parser(this.content);
     }
-    
-    config(settings = {}) {
-        this.settings = {...this.settings, ...settings};
+
+    #contentCheck(content) {
+        let result = true;
+        
+        if(!this.content && !content) {
+            Log.error("noContent");
+            result = false;
+        }
+        
+        if(content) this.content = content;
+
+        return result;
     }
 }

@@ -10,7 +10,6 @@ export default function parseSymbolGroups(content) {
     const groups = { oneLine, multipleLines, upperLine, classic };
 
     let parsedContent = content;
-    const tagMap = [];
 
     Object.keys(groups).forEach((key, index) => {
         const patternsObject = Syntax.patterns.get({ group: key });
@@ -26,16 +25,15 @@ export default function parseSymbolGroups(content) {
             
             const symbol = {...symbols[i], group: key};
             const matches = Syntax.match(parsedContent, symbol, pattern);
+            const tags = generateTags(symbol);
             
             parsedContent = parseGroup({
                 content: parsedContent,
                 symbol,
-                pattern: new RegExp(pattern, "gm"),
+                pattern,
                 matches,
-                tags: generateTags(symbol)
+                tags
             });
-
-            console.log(matches)
         });
     });
 

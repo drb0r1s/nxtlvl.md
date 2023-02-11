@@ -10,7 +10,8 @@ export default function classic({ content, pattern, matches, tags }) {
         addingDifference += tag.length;
     });
 
-    parsedContent = parsedContent.replace(pattern, "");
+    const regex = new RegExp(pattern, "gm");
+    parsedContent = parsedContent.replace(regex, "");
 
     return parsedContent;
 }

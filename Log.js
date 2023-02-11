@@ -1,10 +1,12 @@
 const logs = {
     errors: {
-        invalidContentType: "Invalid content type: {type}. Content must be a string."
+        undefinedParam: "{param} is not defined.",
+        invalidContentType: "Invalid content type: {type}. Content must be a string.",
+        invalidElementType: "Invalid element type: {type}. Element must be an HTML Element (DOM).",
+        noContent: "Content is not defined.\nTo define the content you can:\n1. Provide the content as the first parameter of the NXTLVL class (new NXTLVL(content)).\n2. Provide the content as the first parameter of the md method (.md(content))."
     },
 
     warns: {
-        noContent: "Content is not defined.\nTo define the content you can:\n1. Provide the content as the first parameter of the NXTLVL class (new NXTLVL(content)).\n2. Provide the content as the first parameter of the md method (.md(content)).",
         unnecessaryBlocks: "Unnecessary block: {block}.\nIt is unnecessary to nest blocks of the same type."
     }
 };
