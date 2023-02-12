@@ -18,11 +18,14 @@ export default class NXTLVL {
         return this.#parse();
     }
 
-    injectMd(element, content = "") {
+    injectMd(element, content = "", rules) {
         if(!this.#check("content", content)) return;
         if(!this.#check("element", element)) return;
+        if(rules && !this.#check("rules", rules)) return;
         
         element.innerHTML = this.#parse();
+
+        if(rules) style(element, rules);
     }
 
     style(element, rules) {

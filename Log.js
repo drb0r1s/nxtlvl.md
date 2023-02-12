@@ -4,7 +4,8 @@ const logs = {
         invalidContentType: "Invalid content type: {type}. Content must be a string.",
         invalidElementType: "Invalid element type: {type}. Element must be an HTML Element (DOM).",
         invalidRulesType: "Invalid rules type: {type}. Rules must be an object.",
-        noContent: "Content is not defined.\nTo define the content you can:\n1. Provide the content as the first parameter of the NXTLVL class (new NXTLVL(content)).\n2. Provide the content as the first parameter of the md method (.md(content))."
+        noContent: "Content is not defined.\nTo define the content you can:\n1. Provide the content as the first parameter of the NXTLVL class (new NXTLVL(content)).\n2. Provide the content as the first parameter of the md method (.md(content)).",
+        noStyleSelector: "Selector is missing."
     },
 
     warns: {
