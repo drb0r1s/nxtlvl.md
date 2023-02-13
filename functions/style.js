@@ -1,7 +1,10 @@
 import Log from "../Log.js";
 import Convert from "./Convert.js";
 
-export default function style(element, rules) {
+const Style = { apply, convert };
+export default Style;
+
+function apply(element, rules) {
     Object.keys(rules).forEach((selector, index) => {
         const parsedSelector = parseSelector(selector);
         if(parsedSelector.length === 0) return Log.error("noStyleSelector");
@@ -18,6 +21,22 @@ export default function style(element, rules) {
     });
 }
 
+function convert(rules) {
+    let convertedRules = "";
+
+    Object.keys(rules).forEach((selector, index) => {
+        const parsedSelector = parseSelector(selector);
+        if(parsedSelector.length === 0) return Log.error("noStyleSelector");
+
+        const block = Object.values(rules)[index];
+        const parsedBlock = parseBlock(block);
+
+        convertedRules += `${parsedSelector} {${parsedBlock}}`;
+    });
+
+    return convertedRules;
+}
+
 function parseSelector(selector) {
     let parsedSelector = selector;
 
@@ -32,4 +51,17 @@ function parseSelector(selector) {
     });
 
     return parsedSelector;
+}
+
+function parseBlock(block) {
+    let parsedBlock = "";
+
+    if(Object.keys(block).length === 0) return parsedBlock;
+
+    Object.keys(block).forEach((property, index) => {
+        const value = Object.values(block)[index];
+        parsedBlock += `${Convert.camelToKebab(property)}: ${value};`;
+    });
+
+    return parsedBlock;
 }
