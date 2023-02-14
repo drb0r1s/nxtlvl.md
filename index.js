@@ -6,15 +6,16 @@ export default class NXTLVL {
     constructor(content = "", settings = {}) {
         this.content = content;
         
-        this.defaultStyleRules = {
-            ">": {
-                borderLeft: "3px solid grey",
-                marginLeft: "5px",
-                paddingLeft: "10px"
+        this.defaultSettings = {
+            styleRules: {
+                ">": {
+                    borderLeft: "3px solid grey",
+                    marginLeft: "5px",
+                    paddingLeft: "10px"
+                }
             }
         };
-        
-        this.defaultSettings = {};
+
         this.settings = {...this.defaultSettings, ...settings};
 
         this.md = this.md.bind(this);
@@ -48,10 +49,6 @@ export default class NXTLVL {
 
         Style.apply(element, rules);
     }
-
-    configStyleRules() {
-        
-    }
     
     config(settings = {}) {
         this.settings = {...this.settings, ...settings};
@@ -70,7 +67,7 @@ export default class NXTLVL {
 
         const styleElement = document.createElement("style");
         styleElement.setAttribute("id", "nxtlvl-md-default-style-rules");
-        styleElement.innerText = Style.convert(this.defaultStyleRules);
+        styleElement.innerText = Style.convert(this.defaultSettings.styleRules);
 
         head.appendChild(styleElement);
     }
@@ -92,6 +89,18 @@ export default class NXTLVL {
                 if(param === undefined) {
                     Log.error("undefinedParam", "Element");
                     result = false;
+                }
+
+                else if(Array.isArray(param) || param instanceof NodeList) {
+                    const array = param instanceof NodeList ? [...param] : param;
+                    
+                    let onlyElements = true;
+                    array.forEach(element => { if(element instanceof HTMLElement === false) onlyElements = false });
+
+                    if(!onlyElements) {
+                        Log.error("invalidElementType", typeof param);
+                        result = false;
+                    }
                 }
 
                 else if(param instanceof HTMLElement === false) {
