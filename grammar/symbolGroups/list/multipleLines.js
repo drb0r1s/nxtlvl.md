@@ -155,6 +155,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             if(specialPairs[i + 1] && specialPairs[i].type === specialPairs[i + 1].type && !unnecessaryBlocks) unnecessaryBlocks = true;
         }
 
-        if(unnecessaryBlocks) Log.warn("unnecessaryBlocks", clearMd);
+        if(unnecessaryBlocks) Log.warn("UNNECESSARY.BLOCKS", clearMd);
     }
 }
