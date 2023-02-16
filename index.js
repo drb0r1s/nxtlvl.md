@@ -53,10 +53,69 @@ export default class NXTLVL {
     config(settings) {
         if(!this.#check("settings", settings)) return this.defaultSettings;
 
-        let newSettings = settings;
+        let newSettings = {};
 
+        Object.keys(settings).forEach((key, index) => {
+            const value = Object.values(settings)[index];
+
+            if(typeof value !== "object") newSettings = {...newSettings, [key]: value};
+            else newSettings = {...newSettings, [key]: parseObject(this.settings, key, value)};
+        });
         
-        this.settings = {...this.settings, ...settings};
+        this.settings = {...this.settings, ...newSettings};
+        return {...this.settings, ...newSettings};
+
+        function parseObject(settings, setting, object, path = "") {
+            let parsedObject = object;
+            
+            const objectKeys = Object.keys(object);
+
+            objectKeys.forEach((key, index) => {
+                const value = Object.values(object)[index];
+                if(typeof value !== "object") return;
+
+                parsedObject = {...parsedObject, [key]: parseObject(settings, key, value, path ? `${path}.${key}` : `${setting}.${key}`)};
+            });
+
+            const inherit = { status: false, index: -1, setting: {} };
+
+            if(objectKeys.indexOf("inherit") > -1) {
+                inherit.index = objectKeys.indexOf("inherit");
+                if(Object.values(object)[inherit.index]) inherit.status = true;
+
+                parsedObject = {};
+
+                objectKeys.forEach((key, index) => {
+                    const value = Object.values(object)[index];
+                    if(key !== "inherit") parsedObject = {...parsedObject, [key]: value};
+                });
+            }
+
+            if(!inherit.status) return parsedObject;
+
+            inherit.setting = getSetting();
+            parsedObject = {...inherit.setting, ...parsedObject};
+
+            return parsedObject;
+
+            function getSetting() {
+                let pathValue = settings;
+                const arrayPath = path.split(".");
+
+                if(arrayPath.length > 0) arrayPath.forEach(p => search(pathValue, p));
+                else search(settings, setting);
+
+                function search(object, targetKey) {
+                    let result = null;
+
+                    Object.keys(object).forEach((key, index) => {
+                        if(targetKey === key) result = Object.values(object)[index];
+                    });
+
+                    return result;
+                }
+            }
+        }
     }
 
     #parse() {
