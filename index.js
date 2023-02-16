@@ -83,10 +83,11 @@ export default class NXTLVL {
                 inherit.index = objectKeys.indexOf("inherit");
                 if(Object.values(object)[inherit.index]) inherit.status = true;
 
+                const parsedObjectCopy = parsedObject;
                 parsedObject = {};
 
-                objectKeys.forEach((key, index) => {
-                    const value = Object.values(object)[index];
+                Object.keys(parsedObjectCopy).forEach((key, index) => {
+                    const value = Object.values(parsedObjectCopy)[index];
                     if(key !== "inherit") parsedObject = {...parsedObject, [key]: value};
                 });
             }
@@ -99,11 +100,19 @@ export default class NXTLVL {
             return parsedObject;
 
             function getSetting() {
-                let pathValue = settings;
-                const arrayPath = path.split(".");
+                let result = null;
+                
+                if(path) {
+                    let pathValue = settings;
+                    const arrayPath = path.split(".");
 
-                if(arrayPath.length > 0) arrayPath.forEach(p => search(pathValue, p));
-                else search(settings, setting);
+                    arrayPath.forEach(p => { pathValue = search(pathValue, p) });
+                    result = pathValue;
+                }
+
+                else result = search(settings, setting);
+
+                return result;
 
                 function search(object, targetKey) {
                     let result = null;
