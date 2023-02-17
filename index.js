@@ -8,10 +8,15 @@ export default class NXTLVL {
         
         this.defaultSettings = {
             styleRules: {
-                ">": {
-                    borderLeft: "3px solid grey",
-                    marginLeft: "5px",
-                    paddingLeft: "10px"
+                "blockquote.>": {
+                    backgroundColor: "#f9f9f9",
+                    borderLeft: "10px solid #cccccc",
+                    margin: "5px 10px",
+                    padding: "5px 10px"
+                },
+
+                "classic.span.%": {
+                    whiteSpace: "break-spaces"
                 }
             }
         };
@@ -81,7 +86,11 @@ export default class NXTLVL {
 
             if(objectKeys.indexOf("inherit") > -1) {
                 inherit.index = objectKeys.indexOf("inherit");
-                if(Object.values(object)[inherit.index]) inherit.status = true;
+
+                const inheritValue = Object.values(object)[inherit.index];
+
+                if(typeof inheritValue !== "boolean") Log.error("INVALID_TYPE.INHERIT", typeof inheritValue);
+                else if(inheritValue) inherit.status = true;
 
                 const parsedObjectCopy = parsedObject;
                 parsedObject = {};

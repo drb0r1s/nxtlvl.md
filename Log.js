@@ -5,7 +5,8 @@ const logs = {
             ELEMENT: "Invalid element type: {type}. Element must be an HTML Element (DOM) or an array of elements.",
             RULES: "Invalid rules type: {type}. Rules must be an object.",
             STYLE_BLOCK: "Invalid block of rules type: {type}. Block of rules must be an object.",
-            SETTINGS: "Invalid settings configuration type: {type}. Settings configuration param must be an object."
+            SETTINGS: "Invalid settings configuration type: {type}. Settings configuration param must be an object.",
+            INHERIT: "Invalid type of the reserved property \"inherit\": {type}. \"Inherit\" property must be a boolean."
         },
 
         UNDEFINED: {
