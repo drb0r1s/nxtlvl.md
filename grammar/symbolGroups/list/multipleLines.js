@@ -19,7 +19,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             pairs.classic = [];
             
             const currentMatches = getMatches();
-            console.log(currentMatches)
 
             if(i === 0) {
                 checkPairs(currentMatches);
