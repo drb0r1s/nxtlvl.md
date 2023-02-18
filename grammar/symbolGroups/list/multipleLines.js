@@ -1,42 +1,69 @@
+import Syntax from "../../Syntax.js";
 import Log from "../../../Log.js";
 
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
-    
-    const pairs = [];
-    const specialPairs = [];
+
+    const pairs = { classic: [], special: [] };
 
     let specialSymbols = [];
     const clearMd = symbol.md.replace(/\\+/g, "");
-    
-    checkPairs();
-    checkSpecialPairs();
 
     let addingDifference = 0;
 
-    addPairs(pairs);
-    addSpecialPairs(specialPairs);
+    if(symbol.md === ">") {
+        const { multipleLines: pattern } = Syntax.patterns.get({ group: "multipleLines", md: ">" });
+        let i = 0;
 
-    addNestedBlockquotes();
-    unnecessaryBlocksCheck();
+        while(getMatches().length > 0) {
+            pairs.classic = [];
+            
+            const currentMatches = getMatches();
+            console.log(currentMatches)
 
-    const patterns = {
-        classicMd: `(?<=(?<=<${symbol.tag}.+)">)${symbol.md}${symbol.tag === "blockquote" ? "(?=(?=<h\\d.+)\">|\\s+)" : ""}\\s*(?!<br>)|^${symbol.md}\\s+(?!<br>)`,
-        nxtlvlMd: `(?<=(?<=<${symbol.tag}.+)">)\\(${symbol.md}(\\s+)?<br>|(?<=<\\/${symbol.tag}>)${symbol.md}\\)(\\s+)?<br>`
-    };
+            if(i === 0) {
+                checkPairs(currentMatches);
+                checkSpecialPairs();
 
-    const remove = {
-        classicMd: new RegExp(patterns.classicMd, "gm"),
-        nxtlvlMd: new RegExp(patterns.nxtlvlMd, "gm")
-    };
+                addPairs();
+                addSpecialPairs();
+            }
 
-    parsedContent = parsedContent.replace(remove.classicMd, "");
-    parsedContent = parsedContent.replace(remove.nxtlvlMd, "");
+            else {
+                checkPairs(currentMatches);
+                addPairs();
+            }
+
+            removeMd();
+            
+            i++;
+            addingDifference = 0;
+        }
+
+        function getMatches() {
+            if(i === 0) return matches;
+
+            const newMatches = Syntax.match(parsedContent, symbol, pattern);
+            return newMatches;
+        }
+    }
+
+    else {
+        checkPairs(matches);
+        checkSpecialPairs();
+
+        addPairs();
+        addSpecialPairs();
+
+        removeMd();
+    }
+
+    if(symbol.md !== ">") unnecessaryBlocksCheck();
 
     return parsedContent;
 
-    function addPairs(pairs) {
-        pairs.forEach(pair => {
+    function addPairs() {
+        pairs.classic.forEach(pair => {
             const realPositions = { start: pair.start + addingDifference, end: pair.end + addingDifference };
 
             parsedContent = parsedContent.substring(0, realPositions.start) + tags.opened + parsedContent.substring(realPositions.start, realPositions.end) + tags.closed + parsedContent.substring(realPositions.end);
@@ -44,7 +71,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         });
     }
 
-    function checkPairs() {
+    function checkPairs(matches) {
         let pairTemplate = {};
         
         matches.forEach((match, index) => {
@@ -56,7 +83,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             if(Object.keys(pairTemplate).length === 0) pairTemplate = { start: match.position, end: eol };
             
             if(!nextMatch || (eol + 1 !== nextMatch.position)) {
-                pairs.push(pairTemplate);
+                pairs.classic.push(pairTemplate);
                 pairTemplate = {};
             }
             
@@ -64,8 +91,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         });
     }
 
-    function addSpecialPairs(pairs) {
-        pairs.forEach(pair => {
+    function addSpecialPairs() {
+        pairs.special.forEach(pair => {
             const tag = pair.type === "opened" ? tags.opened : tags.closed;
             const realPosition = pair.position + addingDifference;
 
@@ -97,62 +124,32 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
         for(let i = specialSymbols.length - 1; i >= 0; i--) {
             if(cut.type === specialSymbols[i].type && cut.difference > 0) cut.difference--;
-            else specialPairs.push(specialSymbols[i]);
+            else pairs.special.push(specialSymbols[i]);
         }
 
-        return specialPairs.reverse();
+        return pairs.special.reverse();
     }
 
-    function addNestedBlockquotes() {
-        if(symbol.md !== ">") return;
-
-        const pattern = /(?<=(?<=<blockquote.+)">|^>)[\s+>]+\s+.+<br>/gm;
-        
-        const nestedBlockquotes = {
-            matches: [...parsedContent.matchAll(pattern)],
-            addingDifference: 0
+    function removeMd() {
+        const patterns = {
+            classicMd: "((?<=<blockquote.+\">)>|^>)(\\s+)?(?!<br>)",
+            nxtlvlMd: `(?<=(?<=<${symbol.tag}.+)">)\\(${symbol.md}(\\s+)?<br>|(?<=<\\/${symbol.tag}>)${symbol.md}\\)(\\s+)?<br>`
         };
-
-        nestedBlockquotes.matches.forEach(match => {
-            const string = match[0];
-            const position = { start: match.index + nestedBlockquotes.addingDifference, end: match.index + string.length + nestedBlockquotes.addingDifference };
-            const nestedTags = getNestedTags(string);
-
-            parsedContent = parsedContent.substring(0, position.start) + nestedTags.opened + parsedContent.substring(position.start, position.end) + nestedTags.closed + parsedContent.substring(position.end);
-            nestedBlockquotes.addingDifference += nestedTags.opened.length + nestedTags.closed.length;
-        });
-
-        const removeNestedBlockquotesMd = /^>(?=(?=<blockquote.+)">)|(?<=(?<=<blockquote.+)">)[\s>]+/gm;
-        parsedContent = parsedContent.replaceAll(removeNestedBlockquotesMd, "");
-
-        function getNestedTags(string) {
-            let result = 0;
-            let checkStatus = true;
-            let i = 0;
-
-            while(checkStatus) {
-                if(string[i] === ">") result++;
-                
-                if(string[i] !== ">" && string[i] !== " ") checkStatus = false;
-                else i++;
-            }
-
-            const nestedTags = { opened: "", closed: "" };
-
-            for(let i = 0; i < result; i++) {
-                nestedTags.opened += tags.opened;
-                nestedTags.closed += tags.closed;
-            }
-
-            return nestedTags;
-        }
+    
+        const remove = {
+            classicMd: new RegExp(patterns.classicMd, "gm"),
+            nxtlvlMd: new RegExp(patterns.nxtlvlMd, "gm")
+        };
+    
+        parsedContent = parsedContent.replace(remove.classicMd, "");
+        parsedContent = parsedContent.replace(remove.nxtlvlMd, "");
     }
 
     function unnecessaryBlocksCheck() {
         let unnecessaryBlocks = false;
 
-        for(let i = 0; i < specialPairs.length; i++) {
-            if(specialPairs[i + 1] && specialPairs[i].type === specialPairs[i + 1].type && !unnecessaryBlocks) unnecessaryBlocks = true;
+        for(let i = 0; i < pairs.special.length; i++) {
+            if(pairs.special[i + 1] && pairs.special[i].type === pairs.special[i + 1].type && !unnecessaryBlocks) unnecessaryBlocks = true;
         }
 
         if(unnecessaryBlocks) Log.warn("UNNECESSARY.BLOCKS", clearMd);
