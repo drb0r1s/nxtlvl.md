@@ -1,17 +1,19 @@
 import Convert from "./Convert.js";
 
-export default function generateTags(symbol) {
+export default function generateTags(symbol, custom) {
     const clearMd = symbol.md.replace(/\\+/g, "");
-
-    const classes = {
+    
+    const defaultClasses = {
         group: Convert.camelToKebab(symbol.group),
         tag: symbol.tag,
         md: clearMd
     };
 
-    const classContent = `${classes.group} ${classes.tag} ${classes.md}`;
+    const classes = {...defaultClasses, ...custom};
+
+    const classContent = `nxtlvl ${classes.group} ${classes.tag} ${classes.md}`;
     
-    const tags = { opened: `<${symbol.tag} class="${classContent}">`, closed: `</${symbol.tag}>` };
+    const tags = { opened: `<${classes.tag} class="${classContent}">`, closed: `</${classes.tag}>` };
 
     return tags;
 }

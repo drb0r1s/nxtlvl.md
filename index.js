@@ -8,14 +8,14 @@ export default class NXTLVL {
         
         this.defaultSettings = {
             styleRules: {
-                "blockquote.>": {
+                "nxtlvl.blockquote.>": {
                     backgroundColor: "#f9f9f9",
                     borderLeft: "10px solid #cccccc",
                     margin: "5px 10px",
                     padding: "5px 10px"
                 },
 
-                "classic.span.%": {
+                "nxtlvl.classic.span.%": {
                     whiteSpace: "break-spaces"
                 }
             }

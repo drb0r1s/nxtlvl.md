@@ -7,7 +7,7 @@ import upperLine from "./list/upperLine.js";
 import classic from "./list/classic.js";
 
 export default function parseSymbolGroups(content) {
-    const groups = { oneLine, multipleLines, upperLine, classic };
+    const groups = { oneLine, upperLine, multipleLines, classic };
 
     let parsedContent = content;
 

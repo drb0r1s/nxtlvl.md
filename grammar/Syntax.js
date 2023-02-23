@@ -8,13 +8,6 @@ const Syntax = {
             { tag: "h5", md: "#####" },
             { tag: "h6", md: "######" },
         ],
-    
-        multipleLines: [
-            { tag: "blockquote", md: ">" },
-            // NXTLVL:
-            { tag: "b", md: "\\*\\*" },
-            { tag: "i", md: "\\*" }
-        ],
         
         upperLine: [
             { tag: "h1", md: "=" },
@@ -25,8 +18,13 @@ const Syntax = {
             { tag: "h5", md: "\\*" },
             { tag: "h6", md: "\\." }
         ],
-    
-        //listing: [],
+
+        multipleLines: [
+            { tag: "blockquote", md: ">" },
+            { tag: "ol", md: "[0-9]+\.\\s" },
+            { tag: "ul", md: "\\+" }
+            // NXTLVL:
+        ],
         
         classic: [
             { tag: "b", md: "\\*\\*" },
@@ -39,9 +37,9 @@ const Syntax = {
 
     patterns: {
         oneLine: "((?<=^>(\\s+)?)#{1,6}|^{md})\\s+|(?<=(^>(\\s+)?#{1,6}|^{md})\\s+.+)<br>",
-        multipleLines: "((?<=^<blockquote.+\">)>|^>)(?![\\s>]*<br>).+|^\\({md}(\\s+)?<br>|^{md}\\)(\\s+)?<br>",
+        multipleLines: "((?<=^<(blockquote|ol|ul).+\">){md}|^{md})(?![\\s]*<br>).+|^\\({md}(\\s+)?<br>|^{md}\\)(\\s+)?<br>",
         upperLine: ".+(?=<br>\\n^{md}+<br>)",
-        classic: "(?<!<(b|i)\\sclass=\"classic\\s(b|i)\\s)({md}(?=.+{md})(?!(\\s+)?{md}))(?!\">)|(?<!<(b|i)\\sclass=\"classic\\s(b|i)\\s)((?<={md}.+)(?<!{md}(\\s+)?){md})(?!\">)",
+        classic: "(?<!<(b|i)\\sclass=\"nxtlvl\\sclassic\\s(b|i)\\s)({md}(?=.+{md})(?!(\\s+)?{md}))(?!\">)|(?<!<(b|i)\\sclass=\"nxtlvl\\sclassic\\s(b|i)\\s)((?<={md}.+)(?<!{md}(\\s+)?){md})(?!\">)",
         
         get: (params = {}) => {
             const { group, tag, md } = params;

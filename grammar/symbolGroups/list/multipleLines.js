@@ -1,5 +1,6 @@
 import Syntax from "../../Syntax.js";
 import Log from "../../../Log.js";
+import generateTags from "../../../functions/generateTags.js";
 
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
@@ -42,6 +43,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             if(i === 0) return matches;
 
             const newMatches = Syntax.match(parsedContent, symbol, pattern);
+            console.log(newMatches)
             return newMatches;
         }
     }
@@ -82,11 +84,18 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             validMethod(pair);
         });
 
+        if(symbol.tag === "ol" || symbol.tag === "ul") parseList();
+
         function classic(pair) {
             const realPositions = { start: pair.start + addingDifference, end: pair.end + addingDifference };
+            
+            let listTags = null;
+            if(symbol.tag === "ol") listTags = generateListTags(realPositions.start, realPositions.end);
 
-            parsedContent = parsedContent.substring(0, realPositions.start) + tags.opened + parsedContent.substring(realPositions.start, realPositions.end) + tags.closed + parsedContent.substring(realPositions.end);
-            addingDifference += tags.opened.length + tags.closed.length;
+            const validTags = listTags ? listTags : tags;
+            
+            parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + parsedContent.substring(realPositions.start, realPositions.end) + validTags.closed + parsedContent.substring(realPositions.end);
+            addingDifference += validTags.opened.length + validTags.closed.length;
         }
 
         function special(pair) {
@@ -95,6 +104,75 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
             parsedContent = parsedContent.substring(0, realPosition) + tag + parsedContent.substring(realPosition);
             addingDifference += tag.length;
+        }
+
+        function parseList() {
+            let counter = 1;
+            let stop = false;
+
+            const olEndings = { positions: [], addingDifference: 0, current: 0 };
+            let currentOlEnding = olEndings.positions[olEndings.current];
+
+            const allOlEndings = [...parsedContent.matchAll("</ol>")];
+            allOlEndings.forEach(olEnding => olEndings.positions.push(olEnding.index));
+
+            if(olEndings.positions.length === 0) return;
+            
+            matches.forEach(match => {
+                const lines = [...parsedContent.matchAll(match.md)];
+                const liList = [];
+
+                for(let i = 0; i < lines.length; i++) {
+                    const line = { content: lines[i][0].substring(0, lines[i][0].length - 4), position: lines[i].index };
+                    let status = true;
+
+                    for(let i = 0; i < liList.length; i++) if(line.content === liList[i].content) status = false;
+                    if(status) liList.push(line)
+                }
+
+                liList.forEach(li => {
+                    if(stop) return;
+
+                    const br = 4;
+                    
+                    if(li.position > currentOlEnding) {
+                        counter = 1;
+                        
+                        const nextOlEnding = olEndings.positions[olEndings.current + 1];
+                        if(nextOlEnding === undefined) return stop = true;
+                        
+                        olEndings.current++;
+                        currentOlEnding = olEndings.positions[olEndings.current] + addingDifference;
+                    }
+                    
+                    const liTags = generateTags(symbol, { tag: "li", md: counter.toString() });
+                    
+                    let validContent = `${counter}.`;
+                    let dotPassed = false;
+
+                    for(let i = 0; i < li.content.length; i++) {
+                        if(li.content[i] === ".") dotPassed = true;
+                        else if(dotPassed) validContent += li.content[i];
+                    }
+
+                    parsedContent = parsedContent.substring(0, li.position) + `${liTags.opened}${validContent}${liTags.closed}` + parsedContent.substring(li.position + li.content.length + br);
+                    
+                    counter++;
+
+                    olEndings.addingDifference += liTags.opened.length + liTags.closed.length;
+                    currentOlEnding = olEndings.positions[olEndings.current] + olEndings.addingDifference;
+                });
+            });
+        }
+
+        function generateListTags(start, end) {
+            const olContent = parsedContent.substring(start, end);
+            const numberOfBreaks = olContent.match(/<br>/gm);
+
+            if(numberOfBreaks.length === 0) return null;
+
+            if(numberOfBreaks.length > 1) return generateTags(symbol, { md: `1\-${numberOfBreaks.length}` });
+            return generateTags(symbol, { md: "1" });
         }
     }
 
@@ -110,6 +188,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             if(Object.keys(pairTemplate).length === 0) pairTemplate = { start: match.position, end: eol };
             
             if(!nextMatch || (eol + 1 !== nextMatch.position)) {
+                if(symbol.tag === "ol" && parsedContent[pairTemplate.start] !== "1") return;
+                
                 pairs.classic.push(pairTemplate);
                 pairTemplate = {};
             }
