@@ -43,7 +43,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             if(i === 0) return matches;
 
             const newMatches = Syntax.match(parsedContent, symbol, pattern);
-            console.log(newMatches)
             return newMatches;
         }
     }
@@ -84,7 +83,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             validMethod(pair);
         });
 
-        if(symbol.tag === "ol" || symbol.tag === "ul") parseList();
+        if(symbol.tag === "ol") parseList();
 
         function classic(pair) {
             const realPositions = { start: pair.start + addingDifference, end: pair.end + addingDifference };
@@ -107,61 +106,68 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         }
 
         function parseList() {
-            let counter = 1;
-            let stop = false;
+            const ol = { list: [], pairs: [], innerPairs: 0, addingDifference: 0 };
 
-            const olEndings = { positions: [], addingDifference: 0, current: 0 };
-            let currentOlEnding = olEndings.positions[olEndings.current];
-
-            const allOlEndings = [...parsedContent.matchAll("</ol>")];
-            allOlEndings.forEach(olEnding => olEndings.positions.push(olEnding.index));
-
-            if(olEndings.positions.length === 0) return;
+            const allOls = [...parsedContent.matchAll(/^<ol\sclass=".+">|<\/ol>/gm)];
             
-            matches.forEach(match => {
-                const lines = [...parsedContent.matchAll(match.md)];
-                const liList = [];
+            allOls.forEach(olTag => {
+                const type = olTag[0][1] === "/" ? "closed" : "opened";
+                ol.list.push({ type, position: type === "opened" ? olTag.index + olTag[0].length : olTag.index });
+            });
 
-                for(let i = 0; i < lines.length; i++) {
-                    const line = { content: lines[i][0].substring(0, lines[i][0].length - 4), position: lines[i].index };
-                    let status = true;
+            if(ol.list.length === 0) return;
+            
+            while(ol.list[0].type === "closed" || ol.list[ol.list.length - 1].type === "opened") {
+                if(ol.list[0].type === "closed") ol.list = ol.list.slice(1);
+                if(ol.list[ol.list.length - 1] === "opened") ol.list = ol.list.slice(0, ol.list.length - 1);
+            }
 
-                    for(let i = 0; i < liList.length; i++) if(line.content === liList[i].content) status = false;
-                    if(status) liList.push(line)
+            const counter = { opened: 0, closed: 0 };
+
+            ol.list.forEach(olTag => {
+                if(olTag.type === "opened") counter.opened++;
+                else counter.closed++;
+            });
+
+            if(counter.opened !== counter.closed) return;
+            
+            while(ol.list.length !== 0) ol.list.forEach((olTag, index) => {
+                const nextOlTag = ol.list[index + 1];
+
+                if(olTag.type === "opened" && nextOlTag.type === "closed") {
+                    ol.pairs.push({ start: olTag.position, end: nextOlTag.position });
+                    ol.list.splice(index, 2);
                 }
+            });
 
-                liList.forEach(li => {
-                    if(stop) return;
+            ol.pairs.forEach(pair => {
+                const pairContent = parsedContent.substring(pair.start + ol.addingDifference, pair.end + ol.addingDifference);
+                const contentLines = pairContent.split("<br>");
 
-                    const br = 4;
+                let liContent = "";
+                let liOrder = 1;
+
+                contentLines.forEach(line => {
+                    if(!line) return;
+                    const liTags = generateTags(symbol, { tag: "li", md: liOrder.toString() });
                     
-                    if(li.position > currentOlEnding) {
-                        counter = 1;
-                        
-                        const nextOlEnding = olEndings.positions[olEndings.current + 1];
-                        if(nextOlEnding === undefined) return stop = true;
-                        
-                        olEndings.current++;
-                        currentOlEnding = olEndings.positions[olEndings.current] + addingDifference;
+                    let validLine = `${liOrder}.`;
+                    let dotStatus = false;
+
+                    for(let i = 0; i < line.length; i++) {
+                        if(line[i] === ".") dotStatus = true;
+                        else if(dotStatus) validLine += line[i];
                     }
                     
-                    const liTags = generateTags(symbol, { tag: "li", md: counter.toString() });
-                    
-                    let validContent = `${counter}.`;
-                    let dotPassed = false;
-
-                    for(let i = 0; i < li.content.length; i++) {
-                        if(li.content[i] === ".") dotPassed = true;
-                        else if(dotPassed) validContent += li.content[i];
-                    }
-
-                    parsedContent = parsedContent.substring(0, li.position) + `${liTags.opened}${validContent}${liTags.closed}` + parsedContent.substring(li.position + li.content.length + br);
-                    
-                    counter++;
-
-                    olEndings.addingDifference += liTags.opened.length + liTags.closed.length;
-                    currentOlEnding = olEndings.positions[olEndings.current] + olEndings.addingDifference;
+                    liContent += `${liTags.opened}${validLine}${liTags.closed}`;
+                    liOrder++;
                 });
+                
+                const realPositions = { start: pair.start + ol.addingDifference, end: pair.end + ol.addingDifference };
+                parsedContent = parsedContent.substring(0, realPositions.start) + liContent + parsedContent.substring(realPositions.end);
+                
+                ol.addingDifference += Math.abs(pairContent.length - liContent.length);
+                liOrder++;
             });
         }
 
@@ -188,7 +194,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             if(Object.keys(pairTemplate).length === 0) pairTemplate = { start: match.position, end: eol };
             
             if(!nextMatch || (eol + 1 !== nextMatch.position)) {
-                if(symbol.tag === "ol" && parsedContent[pairTemplate.start] !== "1") return;
+                if(symbol.tag === "ol" && !olValidation(pairTemplate.start)) return pairTemplate = {};
                 
                 pairs.classic.push(pairTemplate);
                 pairTemplate = {};
@@ -196,6 +202,13 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             
             else if(eol + 1 === nextMatch.position) pairTemplate = {...pairTemplate, end: nextMatch.position + nextMatch.md.length};
         });
+
+        function olValidation(start) {
+            let result = true;
+            if((parsedContent[start] !== "1") || (parsedContent[start + 1] !== ".")) result = false;
+
+            return result;
+        }
     }
 
     function checkSpecialPairs() {
