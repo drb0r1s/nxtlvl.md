@@ -88,9 +88,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         function classic(pair) {
             const realPositions = { start: pair.start + addingDifference, end: pair.end + addingDifference };
             
-            let listTags = null;
-            if(symbol.tag === "ol") listTags = generateListTags(realPositions.start, realPositions.end);
-
+            let listTags = generateListTags(realPositions.start, realPositions.end);
             const validTags = listTags ? listTags : tags;
             
             parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + parsedContent.substring(realPositions.start, realPositions.end) + validTags.closed + parsedContent.substring(realPositions.end);
@@ -108,12 +106,10 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         function parseList() {
             const list = { matches: [], pairs: [], innerPairs: 0, addingDifference: 0 };
 
-            const listTagsRegex = new RegExp(`^<${symbol.tag}\\sclass=".+${symbol.tag === "ul" ? symbol.md : ""}">|<\\/${symbol.tag}>`, "gm");
+            const listTagsRegex = new RegExp(`^<${symbol.tag}\\sclass=".+">|<\\/${symbol.tag}>`, "gm");
             const listTags = [...parsedContent.matchAll(listTagsRegex)];
             
-            listTags.forEach((listTag, index) => {
-                if(index > 1 && symbol.tag === "ul") return;
-                
+            listTags.forEach(listTag => {                
                 const type = listTag[0][1] === "/" ? "closed" : "opened";
                 list.matches.push({ type, position: type === "opened" ? listTag.index + listTag[0].length : listTag.index });
             });
@@ -153,14 +149,16 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
             list.pairs.forEach(pair => {
                 const pairContent = parsedContent.substring(pair.start + list.addingDifference, pair.end + list.addingDifference);
+                
                 const contentLines = pairContent.split("<br>");
+                for(let i = 0; i < contentLines.length; i++) contentLines[i] = contentLines[i].replaceAll("\n", "");
 
                 let liContent = "";
                 let liOrder = 1;
 
                 contentLines.forEach(line => {
                     if(!line) return;
-                    const liTags = generateTags(symbol, symbol.tag === "ol" ? { tag: "li", md: liOrder.toString() } : { tag: "li" });
+                    const liTags = generateTags(symbol, { tag: "li", md: symbol.tag === "ol" ? liOrder.toString() : line[0] });
                     
                     let validLine = symbol.tag === "ol" ? "" : line.substring(2);
                     let dotStatus = false;
@@ -184,12 +182,19 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
         function generateListTags(start, end) {
             const listContent = parsedContent.substring(start, end);
-            const numberOfBreaks = listContent.match(/<br>/gm);
+            
+            if(symbol.tag === "ol") {
+                const numberOfBreaks = listContent.match(/<br>/gm);
 
-            if(numberOfBreaks.length === 0) return null;
+                if(numberOfBreaks.length === 0) return null;
 
-            if(numberOfBreaks.length > 1) return generateTags(symbol, { md: `1\-${numberOfBreaks.length}` });
-            return generateTags(symbol, { md: "1" });
+                if(numberOfBreaks.length > 1) return generateTags(symbol, { md: `1\-${numberOfBreaks.length}` });
+                return generateTags(symbol, { md: "1" });
+            }
+
+            else if(symbol.tag === "ul") return generateTags(symbol, { md: listContent[0] });
+
+            return null;
         }
     }
 
