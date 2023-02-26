@@ -83,7 +83,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             validMethod(pair);
         });
 
-        if(symbol.tag === "ol") parseList();
+        if(symbol.tag === "ol" || symbol.tag === "ul") parseList();
 
         function classic(pair) {
             const realPositions = { start: pair.start + addingDifference, end: pair.end + addingDifference };
@@ -106,42 +106,53 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         }
 
         function parseList() {
-            const ol = { list: [], pairs: [], innerPairs: 0, addingDifference: 0 };
+            const list = { matches: [], pairs: [], innerPairs: 0, addingDifference: 0 };
 
-            const allOls = [...parsedContent.matchAll(/^<ol\sclass=".+">|<\/ol>/gm)];
+            const listTagsRegex = new RegExp(`^<${symbol.tag}\\sclass=".+${symbol.tag === "ul" ? symbol.md : ""}">|<\\/${symbol.tag}>`, "gm");
+            const listTags = [...parsedContent.matchAll(listTagsRegex)];
             
-            allOls.forEach(olTag => {
-                const type = olTag[0][1] === "/" ? "closed" : "opened";
-                ol.list.push({ type, position: type === "opened" ? olTag.index + olTag[0].length : olTag.index });
+            listTags.forEach((listTag, index) => {
+                if(index > 1 && symbol.tag === "ul") return;
+                
+                const type = listTag[0][1] === "/" ? "closed" : "opened";
+                list.matches.push({ type, position: type === "opened" ? listTag.index + listTag[0].length : listTag.index });
             });
 
-            if(ol.list.length === 0) return;
+            if(list.matches.length === 0) return;
             
-            while(ol.list[0].type === "closed" || ol.list[ol.list.length - 1].type === "opened") {
-                if(ol.list[0].type === "closed") ol.list = ol.list.slice(1);
-                if(ol.list[ol.list.length - 1] === "opened") ol.list = ol.list.slice(0, ol.list.length - 1);
+            while(list.matches[0].type === "closed" || list.matches[list.matches.length - 1].type === "opened") {
+                if(list.matches[0].type === "closed") list.matches = list.matches.slice(1);
+                if(list.matches[list.matches.length - 1] === "opened") list.matches = list.matches.slice(0, list.matches.length - 1);
             }
 
             const counter = { opened: 0, closed: 0 };
 
-            ol.list.forEach(olTag => {
-                if(olTag.type === "opened") counter.opened++;
+            list.matches.forEach(match => {
+                if(match.type === "opened") counter.opened++;
                 else counter.closed++;
             });
 
             if(counter.opened !== counter.closed) return;
             
-            while(ol.list.length !== 0) ol.list.forEach((olTag, index) => {
-                const nextOlTag = ol.list[index + 1];
+            while(list.matches.length !== 0) list.matches.forEach((match, index) => {
+                const nextMatch = list.matches[index + 1];
 
-                if(olTag.type === "opened" && nextOlTag.type === "closed") {
-                    ol.pairs.push({ start: olTag.position, end: nextOlTag.position });
-                    ol.list.splice(index, 2);
+                if(match.type === "opened" && nextMatch.type === "closed") {
+                    list.pairs.push({ start: match.position, end: nextMatch.position });
+                    list.matches.splice(index, 2);
                 }
             });
 
-            ol.pairs.forEach(pair => {
-                const pairContent = parsedContent.substring(pair.start + ol.addingDifference, pair.end + ol.addingDifference);
+            let swap;
+            
+            for(let i = 0; i < list.pairs.length; i++) for(let j = i + 1; j < list.pairs.length; j++) if(list.pairs[i].start > list.pairs[j].start) {
+                swap = list.pairs[i];
+                list.pairs[i] = list.pairs[j];
+                list.pairs[j] = swap;
+            }
+
+            list.pairs.forEach(pair => {
+                const pairContent = parsedContent.substring(pair.start + list.addingDifference, pair.end + list.addingDifference);
                 const contentLines = pairContent.split("<br>");
 
                 let liContent = "";
@@ -149,12 +160,12 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
                 contentLines.forEach(line => {
                     if(!line) return;
-                    const liTags = generateTags(symbol, { tag: "li", md: liOrder.toString() });
+                    const liTags = generateTags(symbol, symbol.tag === "ol" ? { tag: "li", md: liOrder.toString() } : { tag: "li" });
                     
-                    let validLine = `${liOrder}.`;
+                    let validLine = symbol.tag === "ol" ? "" : line.substring(2);
                     let dotStatus = false;
 
-                    for(let i = 0; i < line.length; i++) {
+                    if(symbol.tag === "ol") for(let i = 0; i < line.length; i++) {
                         if(line[i] === ".") dotStatus = true;
                         else if(dotStatus) validLine += line[i];
                     }
@@ -163,17 +174,17 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                     liOrder++;
                 });
                 
-                const realPositions = { start: pair.start + ol.addingDifference, end: pair.end + ol.addingDifference };
+                const realPositions = { start: pair.start + list.addingDifference, end: pair.end + list.addingDifference };
                 parsedContent = parsedContent.substring(0, realPositions.start) + liContent + parsedContent.substring(realPositions.end);
                 
-                ol.addingDifference += Math.abs(pairContent.length - liContent.length);
+                list.addingDifference += Math.abs(pairContent.length - liContent.length);
                 liOrder++;
             });
         }
 
         function generateListTags(start, end) {
-            const olContent = parsedContent.substring(start, end);
-            const numberOfBreaks = olContent.match(/<br>/gm);
+            const listContent = parsedContent.substring(start, end);
+            const numberOfBreaks = listContent.match(/<br>/gm);
 
             if(numberOfBreaks.length === 0) return null;
 

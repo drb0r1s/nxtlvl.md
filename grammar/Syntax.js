@@ -18,13 +18,6 @@ const Syntax = {
             { tag: "h5", md: "\\*" },
             { tag: "h6", md: "\\." }
         ],
-
-        multipleLines: [
-            { tag: "blockquote", md: ">" },
-            { tag: "ol", md: "[0-9]+\.\\s" },
-            { tag: "ul", md: "\\+" }
-            // NXTLVL:
-        ],
         
         classic: [
             { tag: "b", md: "\\*\\*" },
@@ -32,7 +25,15 @@ const Syntax = {
             { tag: "i", md: "\\*" },
             { tag: "i", md: "_" },
             { tag: "span", md: "%" }
-        ]
+        ],
+
+        multipleLines: [
+            { tag: "blockquote", md: ">" },
+            { tag: "ol", md: "[0-9]+\.\\s" },
+            { tag: "ul", md: "-" },
+            { tag: "ul", md: "\\*" },
+            { tag: "ul", md: "\\+" }
+        ],
     },
 
     patterns: {

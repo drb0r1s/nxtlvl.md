@@ -1,24 +1,14 @@
 import Log from "./Log.js";
 import parser from "./grammar/parser.js";
 import Style from "./functions/Style.js";
+import defaultStyleRules from "./defaultStyleRules.js";
 
 export default class NXTLVL {
     constructor(content = "", settings) {
         this.content = content;
         
         this.defaultSettings = {
-            styleRules: {
-                "nxtlvl.blockquote.>": {
-                    backgroundColor: "#f9f9f9",
-                    borderLeft: "10px solid #cccccc",
-                    margin: "5px 10px",
-                    padding: "5px 10px"
-                },
-
-                "nxtlvl.classic.span.%": {
-                    whiteSpace: "break-spaces"
-                }
-            }
+            styleRules: defaultStyleRules
         };
 
         this.settings = settings !== undefined ? this.config(settings) : this.defaultSettings;
