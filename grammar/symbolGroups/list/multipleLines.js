@@ -6,7 +6,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
 
     const pairs = { classic: [], special: [], specialSymbols: [] };
-    const clearMd = symbol.md.replace(/\\+/g, "");
+    const clearMd = getClearMd();
 
     let addingDifference = 0;
 
@@ -109,7 +109,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             const listTagsRegex = new RegExp(`^<${symbol.tag}\\sclass=".+">|<\\/${symbol.tag}>`, "gm");
             const listTags = [...parsedContent.matchAll(listTagsRegex)];
             
-            listTags.forEach(listTag => {                
+            listTags.forEach(listTag => {
                 const type = listTag[0][1] === "/" ? "closed" : "opened";
                 list.matches.push({ type, position: type === "opened" ? listTag.index + listTag[0].length : listTag.index });
             });
@@ -118,7 +118,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             
             while(list.matches[0].type === "closed" || list.matches[list.matches.length - 1].type === "opened") {
                 if(list.matches[0].type === "closed") list.matches = list.matches.slice(1);
-                if(list.matches[list.matches.length - 1] === "opened") list.matches = list.matches.slice(0, list.matches.length - 1);
+                if(list.matches[list.matches.length - 1].type === "opened") list.matches = list.matches.slice(0, list.matches.length - 1);
             }
 
             const counter = { opened: 0, closed: 0 };
@@ -149,8 +149,11 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
             list.pairs.forEach(pair => {
                 const pairContent = parsedContent.substring(pair.start + list.addingDifference, pair.end + list.addingDifference);
+                const isSpecialPair = pairContent.startsWith(`(${clearMd}<br>`);
                 
                 const contentLines = pairContent.split("<br>");
+                if(isSpecialPair) contentLines.shift();
+
                 for(let i = 0; i < contentLines.length; i++) contentLines[i] = contentLines[i].replaceAll("\n", "");
 
                 let liContent = "";
@@ -158,9 +161,13 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
                 contentLines.forEach(line => {
                     if(!line) return;
-                    const liTags = generateTags(symbol, { tag: "li", md: symbol.tag === "ol" ? liOrder.toString() : line[0] });
                     
-                    let validLine = symbol.tag === "ol" ? "" : line.substring(2);
+                    const tagsMd = isSpecialPair ? clearMd : line[0];
+                    const liTags = generateTags(symbol, { tag: "li", md: symbol.tag === "ol" ? liOrder.toString() : tagsMd });
+                    
+                    let validLine = "";
+                    if(symbol.tag === "ul") validLine = line.substring(isSpecialPair ? 0 : 2);
+                    
                     let dotStatus = false;
 
                     if(symbol.tag === "ol") for(let i = 0; i < line.length; i++) {
@@ -182,6 +189,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
         function generateListTags(start, end) {
             const listContent = parsedContent.substring(start, end);
+            const isSpecialPair = listContent.startsWith(`(${clearMd}<br>`);
             
             if(symbol.tag === "ol") {
                 const numberOfBreaks = listContent.match(/<br>/gm);
@@ -192,7 +200,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 return generateTags(symbol, { md: "1" });
             }
 
-            else if(symbol.tag === "ul") return generateTags(symbol, { md: listContent[0] });
+            else if(symbol.tag === "ul") return generateTags(symbol, { md: isSpecialPair ? clearMd : listContent[0] });
 
             return null;
         }
@@ -254,6 +262,15 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         }
 
         return pairs.special.reverse();
+    }
+
+    function getClearMd() {
+        switch(symbol.tag) {
+            case "ol": return "1.";
+            case "ul": return "+";
+
+            default: return symbol.md.replace(/\\+/g, "");
+        }
     }
 
     function removeMd() {
