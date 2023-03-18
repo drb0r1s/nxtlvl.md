@@ -6,7 +6,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
 
     const pairs = { classic: [], special: [], specialSymbols: [] };
-    const clearMd = getClearMd();
+    const mdCombinations = getMdCombinations();
 
     let addingDifference = 0;
 
@@ -149,7 +149,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
             list.pairs.forEach(pair => {
                 const pairContent = parsedContent.substring(pair.start + list.addingDifference, pair.end + list.addingDifference);
-                const isSpecialPair = pairContent.startsWith(`(${clearMd}<br>`);
+                const isSpecialPair = checkIsSpecialPair(pairContent);
                 
                 const contentLines = pairContent.split("<br>");
                 if(isSpecialPair) contentLines.shift();
@@ -162,7 +162,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 contentLines.forEach(line => {
                     if(!line) return;
                     
-                    const tagsMd = isSpecialPair ? clearMd : line[0];
+                    const tagsMd = isSpecialPair ? isSpecialPair : line[0];
                     const liTags = generateTags(symbol, { tag: "li", md: symbol.tag === "ol" ? liOrder.toString() : tagsMd });
                     
                     let validLine = "";
@@ -189,7 +189,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
         function generateListTags(start, end) {
             const listContent = parsedContent.substring(start, end);
-            const isSpecialPair = listContent.startsWith(`(${clearMd}<br>`);
+            const isSpecialPair = checkIsSpecialPair(listContent);
             
             if(symbol.tag === "ol") {
                 const numberOfBreaks = listContent.match(/<br>/gm);
@@ -200,9 +200,16 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 return generateTags(symbol, { md: "1" });
             }
 
-            else if(symbol.tag === "ul") return generateTags(symbol, { md: isSpecialPair ? clearMd : listContent[0] });
+            else if(symbol.tag === "ul") return generateTags(symbol, { md: isSpecialPair ? isSpecialPair : listContent[0] });
 
             return null;
+        }
+
+        function checkIsSpecialPair(content) {
+            let result = false;
+            mdCombinations.forEach(combination => { if(content.startsWith(`(${combination}<br>`)) result = combination });
+
+            return result;
         }
     }
 
@@ -210,7 +217,16 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         let pairTemplate = {};
         
         matches.forEach((match, index) => {
-            if(match.md === `(${clearMd}<br>` || match.md === `${clearMd})<br>`) return pairs.specialSymbols.push({ type: match.md[0] == "(" ? "opened" : "closed", start: match.position });
+            let isSpecialMatch = false;
+            
+            mdCombinations.forEach(combination => {
+                if(match.md === `(${combination}<br>` || match.md === `${combination})<br>`) {
+                    isSpecialMatch = true;
+                    return pairs.specialSymbols.push({ type: match.md[0] == "(" ? "opened" : "closed", start: match.position });
+                }
+            });
+
+            if(isSpecialMatch) return;
             
             const eol = match.position + match.md.length;
             const nextMatch = matches[index + 1];
@@ -264,13 +280,20 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         return pairs.special.reverse();
     }
 
-    function getClearMd() {
+    function getMdCombinations() {
+        let result = [];
+        
         switch(symbol.tag) {
-            case "ol": return "1.";
-            case "ul": return "+";
-
-            default: return symbol.md.replace(/\\+/g, "");
+            case "ol": 
+                result.push("1.");
+                break;
+            case "ul":
+                result.push("*", "+", "-");
+                break;
+            default: result.push(symbol.md.replace(/\\+/g, ""));
         }
+
+        return result;
     }
 
     function removeMd() {
@@ -295,6 +318,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             if(pairs.special[i + 1] && pairs.special[i].type === pairs.special[i + 1].type && !unnecessaryBlocks) unnecessaryBlocks = true;
         }
 
-        if(unnecessaryBlocks) Log.warn("UNNECESSARY.BLOCKS", clearMd);
+        if(unnecessaryBlocks) Log.warn("UNNECESSARY.BLOCKS", ">");
     }
 }
