@@ -1,3 +1,5 @@
+import generateTags from "../../../functions/generateTags.js";
+
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
 
@@ -7,8 +9,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     
     const mdCombinations = getMdCombinations();
     let addingDifference = 0;
-
-    console.log(matches)
 
     getPairs(matches);
     formatPairs();
@@ -78,9 +78,12 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
     function addPairs() {
         formattedPairs.forEach(pair => {
+            const realInnerContent = parsedContent.substring(pair.start + addingDifference, pair.end + addingDifference);
+            const specialStatus = isPairSpecial(realInnerContent);
+            
             const innerContent = {
-                real: parsedContent.substring(pair.start + addingDifference, pair.end + addingDifference),
-                parsed: parseList(parsedContent.substring(pair.start + addingDifference, pair.end + addingDifference))
+                real: realInnerContent,
+                parsed: parseList(realInnerContent, specialStatus)
             };
 
             if(symbol.tag === "ol" && (!innerContent.real.startsWith("1. ") && !innerContent.real.startsWith("(1."))) return;
@@ -88,62 +91,69 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             const realPositions = { start: pair.start + addingDifference, end: pair.end + addingDifference };
             const innerContentDifference = Math.abs(innerContent.real.length - innerContent.parsed.length);
 
-            parsedContent = parsedContent.substring(0, realPositions.start) + tags.opened + innerContent.parsed + tags.closed + parsedContent.substring(realPositions.end);
-            addingDifference += tags.opened.length + tags.closed.length + innerContentDifference;
+            const validTags = getValidTags(innerContent.real);
+
+            parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + innerContent.parsed + validTags.closed + parsedContent.substring(realPositions.end);
+            addingDifference += validTags.opened.length + validTags.closed.length + innerContentDifference;
         });
 
-        function parseList(content) {
+        function parseList(content, specialStatus) {
             if(symbol.tag !== "ol" && symbol.tag !== "ul") return content;
 
+            const mdSymbol = content[0] === "(" ? content[1] : content[0];
+            
             let parsedListContent = "";
             const lines = content.split("\n");
             
-            lines.forEach(line => {
+            lines.forEach((line, index) => {
                 if(!line) return;
-                parsedListContent += `<li>${removeListMd(line)}</li>`;
+
+                const liTags = generateTags(symbol, { tag: "li", md: mdSymbol === "1" ? index + 1 : mdSymbol });
+                parsedListContent += `${liTags.opened}${removeListMd(line)}${liTags.closed}`;
             });
             
             return parsedListContent;
-        }
 
-        function removeListMd(content) {
-            let newContent = "";
-
-            if(symbol.tag === "ol") {
-                let ignore = true;
-                let dotStatus = false;
-                
+            function removeListMd(content) {
+                let newContent = "";
+    
+                let ignore = !specialStatus;
+                let cancelIgnore = false;
+    
+                const cancelTarget = symbol.tag === "ol" ? "." : " ";
+    
                 for(let i = 0; i < content.length; i++) {
                     if(!ignore) newContent += content[i];
                     
-                    else if(ignore && content[i] === ".") dotStatus = true;
+                    else if(ignore && content[i] === cancelTarget) cancelIgnore = true;
                     
-                    else if(dotStatus && content[i] !== " ") {
+                    else if(cancelIgnore && content[i] !== " ") {
                         ignore = false;
                         newContent += content[i];
                     }
                 }
+    
+                return newContent;
+            }
+        }
+
+        function getValidTags(innerContent) {
+            if(symbol.tag !== "ol" &&  symbol.tag !== "ul") return tags;
+
+            const mdSymbol = innerContent[0] === "(" ? innerContent[1] : innerContent[0];
+            let tagsMd = mdSymbol;
+
+            if(mdSymbol === "1") {
+                const lines = innerContent.split("\n");
+
+                let counter = 0;
+                for(let i = 0; i < lines.length; i++) if(lines[i]) counter++;
+
+                tagsMd = `1-${counter}`;
             }
 
-            else {
-                let ignore = true;
-                let spaceStatus = false;
-
-                if(["*", "+", "-"].indexOf(content[0]) === -1) newContent = content;
-
-                else for(let i = 0; i < content.length; i++) {
-                    if(!ignore) newContent += content[i];
-                    
-                    else if(ignore && content[i] === " ") spaceStatus = true;
-
-                    else if(spaceStatus && content[i] !== " ") {
-                        ignore = false;
-                        newContent += content[i];
-                    }
-                }
-            }
-
-            return newContent;
+            const listTags = generateTags(symbol, { md: tagsMd });
+            return listTags;
         }
     }
 
