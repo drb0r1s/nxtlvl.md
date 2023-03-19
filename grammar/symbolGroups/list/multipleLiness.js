@@ -15,6 +15,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
     addPairs();
 
+    removeMd();
+
     function getPairs(matches) {
         let pairTemplate = {};
 
@@ -78,20 +80,22 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
     function addPairs() {
         formattedPairs.forEach(pair => {
-            const realInnerContent = parsedContent.substring(pair.start + addingDifference, pair.end + addingDifference);
-            const specialStatus = isPairSpecial(realInnerContent);
+            const specialStatus = parsedContent[pair.start + addingDifference] === "(" ? parsedContent[pair.start + addingDifference + 1] : false;
+            const skipSpecialMd = specialStatus ? `(${specialStatus.length}${specialStatus === "1" ? "." : ""}<br>`.length : 0;
+            
+            const realInnerContent = parsedContent.substring(pair.start + addingDifference + skipSpecialMd, pair.end + addingDifference);
             
             const innerContent = {
                 real: realInnerContent,
                 parsed: parseList(realInnerContent, specialStatus)
             };
 
-            if(symbol.tag === "ol" && (!innerContent.real.startsWith("1. ") && !innerContent.real.startsWith("(1."))) return;
+            if(symbol.tag === "ol" && (!innerContent.real.startsWith("1. ") && specialStatus !== "1" )) return;
             
-            const realPositions = { start: pair.start + addingDifference, end: pair.end + addingDifference };
+            const realPositions = { start: pair.start + addingDifference + skipSpecialMd, end: pair.end + addingDifference };
             const innerContentDifference = Math.abs(innerContent.real.length - innerContent.parsed.length);
 
-            const validTags = getValidTags(innerContent.real);
+            const validTags = getValidTags(innerContent.real, specialStatus);
 
             parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + innerContent.parsed + validTags.closed + parsedContent.substring(realPositions.end);
             addingDifference += validTags.opened.length + validTags.closed.length + innerContentDifference;
@@ -99,16 +103,19 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
         function parseList(content, specialStatus) {
             if(symbol.tag !== "ol" && symbol.tag !== "ul") return content;
-
-            const mdSymbol = content[0] === "(" ? content[1] : content[0];
             
             let parsedListContent = "";
-            const lines = content.split("\n");
-            
-            lines.forEach((line, index) => {
-                if(!line) return;
 
-                const liTags = generateTags(symbol, { tag: "li", md: mdSymbol === "1" ? index + 1 : mdSymbol });
+            const lines = content.split("\n");
+            let lineCounter = 0;
+            
+            lines.forEach(line => {
+                if(!line) return;
+                lineCounter++;
+
+                const tagsMd = specialStatus ? specialStatus : symbol.tag === "ol" ? lineCounter : line[0];
+                const liTags = generateTags(symbol, { tag: "li", md: tagsMd === "1" ? lineCounter : tagsMd });
+
                 parsedListContent += `${liTags.opened}${removeListMd(line)}${liTags.closed}`;
             });
             
@@ -137,13 +144,12 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             }
         }
 
-        function getValidTags(innerContent) {
+        function getValidTags(innerContent, specialStatus) {
             if(symbol.tag !== "ol" &&  symbol.tag !== "ul") return tags;
 
-            const mdSymbol = innerContent[0] === "(" ? innerContent[1] : innerContent[0];
-            let tagsMd = mdSymbol;
+            let tagsMd = specialStatus ? specialStatus : innerContent[0];
 
-            if(mdSymbol === "1") {
+            if(tagsMd === "1") {
                 const lines = innerContent.split("\n");
 
                 let counter = 0;
@@ -192,6 +198,21 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         }
 
         return result;
+    }
+
+    function removeMd() {
+        const patterns = {
+            classicMd: "((?<=<blockquote.+\">)>|^>)(\\s+)?(?!<br>)",
+            nxtlvlMd: `\\(${symbol.md}(\\s+)?<br>(?=<${symbol.tag}.+">)|(?<=<\\/${symbol.tag}>)${symbol.md}\\)(\\s+)?<br>`
+        };
+    
+        const remove = {
+            classicMd: new RegExp(patterns.classicMd, "gm"),
+            nxtlvlMd: new RegExp(patterns.nxtlvlMd, "gm")
+        };
+    
+        parsedContent = parsedContent.replace(remove.classicMd, "");
+        parsedContent = parsedContent.replace(remove.nxtlvlMd, "");
     }
 
     return parsedContent;
