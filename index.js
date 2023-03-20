@@ -2,6 +2,7 @@ import Log from "./Log.js";
 import parser from "./grammar/parser.js";
 import Style from "./functions/Style.js";
 import defaultStyleRules from "./defaultStyleRules.js";
+import Convert from "./functions/Convert.js";
 
 export default class NXTLVL {
     constructor(content = "", settings) {
@@ -230,4 +231,50 @@ export default class NXTLVL {
 
         return result;
     }
+
+    static autoMd() {
+        const { injectMd } = new NXTLVL();
+
+        const autoMdElements = {
+            class: document.querySelectorAll(".nxtlvl-md"),
+            data: document.querySelectorAll("[data-nxtlvl-md='true']")
+        };
+        
+        Object.values(autoMdElements).forEach(elements => elements.forEach(element => {
+            const { nxtlvlStyle } = element.dataset;
+            const rules = convertToObjectRules(nxtlvlStyle);
+
+            injectMd(element, element.innerText, rules);
+        }));
+
+        function convertToObjectRules(rules) {
+            if(!rules) return;
+
+            let objectRules = {};
+            const noBlankRules = rules.replaceAll(/[\s\n]+/gm, "");
+
+            const divideBlocks = noBlankRules.split("}");
+            if(!divideBlocks[divideBlocks.length - 1]) divideBlocks.pop();
+
+            divideBlocks.forEach(block => {
+                const divideRules = block.split("{");
+                
+                const divideProps = divideRules[1].split(";");
+                if(!divideProps[divideProps.length - 1]) divideProps.pop();
+
+                let objectProps = {};
+                
+                divideProps.forEach(prop => {
+                    const [name, object] = prop.split(":");
+                    objectProps = {...objectProps, [Convert.kebabToCamel(name)]: object};
+                });
+
+                objectRules = {...objectRules, [divideRules[0]]: objectProps};
+            });
+
+            return objectRules;
+        }
+    }
 }
+
+NXTLVL.autoMd();
