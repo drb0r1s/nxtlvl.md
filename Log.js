@@ -16,7 +16,8 @@ const logs = {
         },
 
         UNKNOWN: {
-            SETTING: "Unkown setting: {setting}. While configuring default settings you should edit only the existing properties."
+            SETTING: "Unkown setting: {setting}. While configuring default settings you should edit only the existing properties.",
+            STYLE_SYNTAX: "Unkown style syntax at data-nxtlvl-style. Syntax is not properly defined."
         }
     },
 

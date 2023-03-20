@@ -1,13 +1,14 @@
 import Syntax from "../../Syntax.js";
-import Log from "../../../Log.js";
 import generateTags from "../../../functions/generateTags.js";
 
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
 
-    const pairs = { classic: [], special: [], specialSymbols: [] };
+    const pairs = { classic: [], special: [] };
+    let specialMd = [];
+    let formattedPairs = [];
+    
     const mdCombinations = getMdCombinations();
-
     let addingDifference = 0;
 
     if(symbol.md === ">") {
@@ -17,21 +18,14 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         while(getMatches().length > 0) {
             pairs.classic = [];
             pairs.special = [];
-            pairs.specialSymbols = [];
+            specialMd = [];
             
             const currentMatches = getMatches();
 
-            if(i === 0) {
-                checkPairs(currentMatches);
-                checkSpecialPairs();
+            getPairs(currentMatches);
+            formatPairs();
 
-                addPairs();
-            }
-
-            else {
-                checkPairs(currentMatches);
-                addPairs();
-            }
+            addPairs();
 
             removeMd();
             
@@ -48,236 +42,179 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     }
 
     else {
-        checkPairs(matches);
-        checkSpecialPairs();
+        getPairs(matches);
+        formatPairs();
 
         addPairs();
 
         removeMd();
     }
 
-    if(symbol.md !== ">") unnecessaryBlocksCheck();
+    function getPairs(matches) {
+        let pairTemplate = {};
 
-    return parsedContent;
+        matches.forEach((match, index) => {
+            const specialMdStatus = specialMdSearch(match);
+            if(specialMdStatus) return;
 
-    function addPairs() {
-        const mergedPairs = [];
-
-        Object.keys(pairs).forEach((key, index) => {
-            if(key === "specialSymbols") return;
-            
-            const value = Object.values(pairs)[index];
-            mergedPairs.push(...value);
+            classicSearch(match, matches[index + 1]);
         });
 
-        let swap;
-        
-        for(let i = 0; i < mergedPairs.length; i++) for(let j = i + 1; j < mergedPairs.length; j++) if(mergedPairs[i].start > mergedPairs[j].start) {
-            swap = mergedPairs[i];
-            mergedPairs[i] = mergedPairs[j];
-            mergedPairs[j] = swap;
-        }
+        if(specialMd.length > 0) mergeSpecialMd();
 
-        mergedPairs.forEach(pair => {
-            const validMethod = pair.end ? classic : special;
-            validMethod(pair);
-        });
-
-        if(symbol.tag === "ol" || symbol.tag === "ul") parseList();
-
-        function classic(pair) {
-            const realPositions = { start: pair.start + addingDifference, end: pair.end + addingDifference };
+        function specialMdSearch(match) {
+            let result = false;
+            const specialPair = isPairSpecial(match.md);
             
-            let listTags = generateListTags(realPositions.start, realPositions.end);
-            const validTags = listTags ? listTags : tags;
-            
-            parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + parsedContent.substring(realPositions.start, realPositions.end) + validTags.closed + parsedContent.substring(realPositions.end);
-            addingDifference += validTags.opened.length + validTags.closed.length;
-        }
-
-        function special(pair) {
-            const tag = pair.type === "opened" ? tags.opened : tags.closed;
-            const realPosition = pair.start + addingDifference;
-
-            parsedContent = parsedContent.substring(0, realPosition) + tag + parsedContent.substring(realPosition);
-            addingDifference += tag.length;
-        }
-
-        function parseList() {
-            const list = { matches: [], pairs: [], innerPairs: 0, addingDifference: 0 };
-
-            const listTagsRegex = new RegExp(`^<${symbol.tag}\\sclass=".+">|<\\/${symbol.tag}>`, "gm");
-            const listTags = [...parsedContent.matchAll(listTagsRegex)];
-            
-            listTags.forEach(listTag => {
-                const type = listTag[0][1] === "/" ? "closed" : "opened";
-                list.matches.push({ type, position: type === "opened" ? listTag.index + listTag[0].length : listTag.index });
-            });
-
-            if(list.matches.length === 0) return;
-            
-            while(list.matches[0].type === "closed" || list.matches[list.matches.length - 1].type === "opened") {
-                if(list.matches[0].type === "closed") list.matches = list.matches.slice(1);
-                if(list.matches[list.matches.length - 1].type === "opened") list.matches = list.matches.slice(0, list.matches.length - 1);
+            if(specialPair) {
+                result = true;
+                specialMd.push({ type: match.md[0] === "(" ? "opened" : "closed", position: match.position });
             }
 
+            return result;
+        }
+
+        function mergeSpecialMd() {
             const counter = { opened: 0, closed: 0 };
 
-            list.matches.forEach(match => {
-                if(match.type === "opened") counter.opened++;
+            specialMd.forEach(md => {
+                if(md.type === "opened") counter.opened++;
                 else counter.closed++;
             });
 
             if(counter.opened !== counter.closed) return;
             
-            while(list.matches.length !== 0) list.matches.forEach((match, index) => {
-                const nextMatch = list.matches[index + 1];
-
-                if(match.type === "opened" && nextMatch.type === "closed") {
-                    list.pairs.push({ start: match.position, end: nextMatch.position });
-                    list.matches.splice(index, 2);
-                }
-            });
-
-            let swap;
-            
-            for(let i = 0; i < list.pairs.length; i++) for(let j = i + 1; j < list.pairs.length; j++) if(list.pairs[i].start > list.pairs[j].start) {
-                swap = list.pairs[i];
-                list.pairs[i] = list.pairs[j];
-                list.pairs[j] = swap;
-            }
-
-            list.pairs.forEach(pair => {
-                const pairContent = parsedContent.substring(pair.start + list.addingDifference, pair.end + list.addingDifference);
-                const isSpecialPair = checkIsSpecialPair(pairContent);
-                
-                const contentLines = pairContent.split("<br>");
-                if(isSpecialPair) contentLines.shift();
-
-                for(let i = 0; i < contentLines.length; i++) contentLines[i] = contentLines[i].replaceAll("\n", "");
-
-                let liContent = "";
-                let liOrder = 1;
-
-                contentLines.forEach(line => {
-                    if(!line) return;
+            while(specialMd.length > 0) {
+                for(let i = 0; i < specialMd.length; i++) {
+                    const current = specialMd[i];
+                    const next = specialMd[i + 1];
                     
-                    const tagsMd = isSpecialPair ? isSpecialPair : line[0];
-                    const liTags = generateTags(symbol, { tag: "li", md: symbol.tag === "ol" ? liOrder.toString() : tagsMd });
-                    
-                    let validLine = "";
-                    if(symbol.tag === "ul") validLine = line.substring(isSpecialPair ? 0 : 2);
-                    
-                    let dotStatus = false;
-
-                    if(symbol.tag === "ol") for(let i = 0; i < line.length; i++) {
-                        if(line[i] === ".") dotStatus = true;
-                        else if(dotStatus) validLine += line[i];
+                    if(current.type === "opened" && next.type === "closed") {
+                        pairs.special.push({ start: current.position, end: next.position });
+                        specialMd.splice(i, 2);
                     }
-                    
-                    liContent += `${liTags.opened}${validLine}${liTags.closed}`;
-                    liOrder++;
-                });
-                
-                const realPositions = { start: pair.start + list.addingDifference, end: pair.end + list.addingDifference };
-                parsedContent = parsedContent.substring(0, realPositions.start) + liContent + parsedContent.substring(realPositions.end);
-                
-                list.addingDifference += Math.abs(pairContent.length - liContent.length);
-                liOrder++;
-            });
-        }
-
-        function generateListTags(start, end) {
-            const listContent = parsedContent.substring(start, end);
-            const isSpecialPair = checkIsSpecialPair(listContent);
-            
-            if(symbol.tag === "ol") {
-                const numberOfBreaks = listContent.match(/<br>/gm);
-
-                if(numberOfBreaks.length === 0) return null;
-
-                if(numberOfBreaks.length > 1) return generateTags(symbol, { md: `1\-${numberOfBreaks.length}` });
-                return generateTags(symbol, { md: "1" });
-            }
-
-            else if(symbol.tag === "ul") return generateTags(symbol, { md: isSpecialPair ? isSpecialPair : listContent[0] });
-
-            return null;
-        }
-
-        function checkIsSpecialPair(content) {
-            let result = false;
-            mdCombinations.forEach(combination => { if(content.startsWith(`(${combination}<br>`)) result = combination });
-
-            return result;
-        }
-    }
-
-    function checkPairs(matches) {
-        let pairTemplate = {};
-        
-        matches.forEach((match, index) => {
-            let isSpecialMatch = false;
-            
-            mdCombinations.forEach(combination => {
-                if(match.md === `(${combination}<br>` || match.md === `${combination})<br>`) {
-                    isSpecialMatch = true;
-                    return pairs.specialSymbols.push({ type: match.md[0] == "(" ? "opened" : "closed", start: match.position });
                 }
-            });
+            }
+        }
 
-            if(isSpecialMatch) return;
-            
+        function classicSearch(match, nextMatch) {
             const eol = match.position + match.md.length;
-            const nextMatch = matches[index + 1];
-    
-            if(Object.keys(pairTemplate).length === 0) pairTemplate = { start: match.position, end: eol };
             
+            if(Object.keys(pairTemplate).length === 0) pairTemplate = { start: match.position, end: eol };
+
             if(!nextMatch || (eol + 1 !== nextMatch.position)) {
-                if(symbol.tag === "ol" && !olValidation(pairTemplate.start)) return pairTemplate = {};
-                
                 pairs.classic.push(pairTemplate);
                 pairTemplate = {};
             }
-            
+
             else if(eol + 1 === nextMatch.position) pairTemplate = {...pairTemplate, end: nextMatch.position + nextMatch.md.length};
-        });
-
-        function olValidation(start) {
-            let result = true;
-            if((parsedContent[start] !== "1") || (parsedContent[start + 1] !== ".")) result = false;
-
-            return result;
         }
     }
 
-    function checkSpecialPairs() {
-        if(pairs.specialSymbols.length === 0) return;
+    function addPairs() {
+        formattedPairs.forEach(pair => {
+            const specialStatus = parsedContent[pair.start + addingDifference] === "(" ? parsedContent[pair.start + addingDifference + 1] : false;
+            const skipSpecialMd = specialStatus ? `(${specialStatus.length}${specialStatus === "1" ? "." : ""}<br>`.length : 0;
+            
+            const realInnerContent = parsedContent.substring(pair.start + addingDifference + skipSpecialMd, pair.end + addingDifference);
+            
+            const innerContent = {
+                real: realInnerContent,
+                parsed: parseList(realInnerContent, specialStatus)
+            };
+
+            if(symbol.tag === "ol" && (!innerContent.real.startsWith("1. ") && specialStatus !== "1" )) return;
+            
+            const realPositions = { start: pair.start + addingDifference + skipSpecialMd, end: pair.end + addingDifference };
+            const innerContentDifference = Math.abs(innerContent.real.length - innerContent.parsed.length);
+
+            const validTags = getValidTags(innerContent.real, specialStatus);
+
+            parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + innerContent.parsed + validTags.closed + parsedContent.substring(realPositions.end);
+            addingDifference += validTags.opened.length + validTags.closed.length + innerContentDifference;
+        });
+
+        function parseList(content, specialStatus) {
+            if(symbol.tag !== "ol" && symbol.tag !== "ul") return content;
+            
+            let parsedListContent = "";
+
+            const lines = content.split("\n");
+            let lineCounter = 0;
+            
+            lines.forEach(line => {
+                if(!line) return;
+                lineCounter++;
+
+                const tagsMd = specialStatus ? specialStatus : symbol.tag === "ol" ? lineCounter : line[0];
+                const liTags = generateTags(symbol, { tag: "li", md: tagsMd === "1" ? lineCounter : tagsMd });
+
+                parsedListContent += `${liTags.opened}${removeListMd(line)}${liTags.closed}`;
+            });
+            
+            return parsedListContent;
+
+            function removeListMd(content) {
+                let newContent = "";
+    
+                let ignore = !specialStatus;
+                let cancelIgnore = false;
+    
+                const cancelTarget = symbol.tag === "ol" ? "." : " ";
+    
+                for(let i = 0; i < content.length; i++) {
+                    if(!ignore) newContent += content[i];
+                    
+                    else if(ignore && content[i] === cancelTarget) cancelIgnore = true;
+                    
+                    else if(cancelIgnore && content[i] !== " ") {
+                        ignore = false;
+                        newContent += content[i];
+                    }
+                }
+    
+                return newContent;
+            }
+        }
+
+        function getValidTags(innerContent, specialStatus) {
+            if(symbol.tag !== "ol" &&  symbol.tag !== "ul") return tags;
+
+            let tagsMd = specialStatus ? specialStatus : innerContent[0];
+
+            if(tagsMd === "1") {
+                const lines = innerContent.split("\n");
+
+                let counter = 0;
+                for(let i = 0; i < lines.length; i++) if(lines[i]) counter++;
+
+                tagsMd = `1-${counter}`;
+            }
+
+            const listTags = generateTags(symbol, { md: tagsMd });
+            return listTags;
+        }
+    }
+
+    function formatPairs() {
+        formattedPairs = [...pairs.classic, ...pairs.special];
+        let swap;
+
+        for(let i = 0; i < formattedPairs.length; i++) for(let j = i + 1; j < formattedPairs.length; j++) if(formattedPairs[i].start > formattedPairs[j].start) {
+            swap = formattedPairs[i];
+            formattedPairs[i] = formattedPairs[j];
+            formattedPairs[j] = swap;
+        }
+    }
+
+    function isPairSpecial(content) {
+        let result = false;
         
-        const counter = { opened: 0, closed: 0 };
-        const cut = { type: "", difference: 0 };
+        mdCombinations.forEach(combination => {
+            if(content.startsWith(`(${combination}<br>`) || content.startsWith(`${combination})<br>`)) result = combination;
+        });
 
-        if(pairs.specialSymbols[0].type === "closed") pairs.specialSymbols = pairs.specialSymbols.slice(1);
-        if(pairs.specialSymbols[pairs.specialSymbols.length - 1] === "opened") pairs.specialSymbols = pairs.specialSymbols.slice(0, pairs.specialSymbols.length - 1);
-
-        for(let i = 0; i < pairs.specialSymbols.length; i++) {
-            if(pairs.specialSymbols[i].type === "opened") counter.opened++;
-            else counter.closed++;
-        }
-
-        if(counter.opened !== counter.closed) {
-            const larger = counter.opened > counter.closed ? "opened" : "closed";
-            cut.type = larger;
-        }
-
-        cut.difference = Math.abs(counter.opened - counter.closed);
-
-        for(let i = pairs.specialSymbols.length - 1; i >= 0; i--) {
-            if(cut.type === pairs.specialSymbols[i].type && cut.difference > 0) cut.difference--;
-            else pairs.special.push(pairs.specialSymbols[i]);
-        }
-
-        return pairs.special.reverse();
+        return result;
     }
 
     function getMdCombinations() {
@@ -299,7 +236,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     function removeMd() {
         const patterns = {
             classicMd: "((?<=<blockquote.+\">)>|^>)(\\s+)?(?!<br>)",
-            nxtlvlMd: `(?<=(?<=<${symbol.tag}.+)">)\\(${symbol.md}(\\s+)?<br>|(?<=<\\/${symbol.tag}>)${symbol.md}\\)(\\s+)?<br>`
+            nxtlvlMd: `\\(${symbol.md}(\\s+)?<br>(?=<${symbol.tag}.+">)|(?<=<\\/${symbol.tag}>)${symbol.md}\\)(\\s+)?<br>`
         };
     
         const remove = {
@@ -311,13 +248,5 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         parsedContent = parsedContent.replace(remove.nxtlvlMd, "");
     }
 
-    function unnecessaryBlocksCheck() {
-        let unnecessaryBlocks = false;
-
-        for(let i = 0; i < pairs.special.length; i++) {
-            if(pairs.special[i + 1] && pairs.special[i].type === pairs.special[i + 1].type && !unnecessaryBlocks) unnecessaryBlocks = true;
-        }
-
-        if(unnecessaryBlocks) Log.warn("UNNECESSARY.BLOCKS", ">");
-    }
+    return parsedContent;
 }

@@ -2,7 +2,7 @@ import Syntax from "../Syntax.js";
 import generateTags from "../../functions/generateTags.js";
 
 import oneLine from "./list/oneLine.js";
-import multipleLines from "./list/multipleLiness.js";
+import multipleLines from "./list/multipleLines.js";
 import upperLine from "./list/upperLine.js";
 import classic from "./list/classic.js";
 

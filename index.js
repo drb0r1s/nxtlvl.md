@@ -250,29 +250,33 @@ export default class NXTLVL {
         function convertToObjectRules(rules) {
             if(!rules) return;
 
-            let objectRules = {};
-            const noBlankRules = rules.replaceAll(/[\s\n]+/gm, "");
+            try {
+                let objectRules = {};
+                const noBlankRules = rules.replaceAll(/[\s\n]+/gm, "");
 
-            const divideBlocks = noBlankRules.split("}");
-            if(!divideBlocks[divideBlocks.length - 1]) divideBlocks.pop();
+                const divideBlocks = noBlankRules.split("}");
+                if(!divideBlocks[divideBlocks.length - 1]) divideBlocks.pop();
 
-            divideBlocks.forEach(block => {
-                const divideRules = block.split("{");
-                
-                const divideProps = divideRules[1].split(";");
-                if(!divideProps[divideProps.length - 1]) divideProps.pop();
+                divideBlocks.forEach(block => {
+                    const divideRules = block.split("{");
+                    
+                    const divideProps = divideRules[1].split(";");
+                    if(!divideProps[divideProps.length - 1]) divideProps.pop();
 
-                let objectProps = {};
-                
-                divideProps.forEach(prop => {
-                    const [name, object] = prop.split(":");
-                    objectProps = {...objectProps, [Convert.kebabToCamel(name)]: object};
+                    let objectProps = {};
+                    
+                    divideProps.forEach(prop => {
+                        const [name, object] = prop.split(":");
+                        objectProps = {...objectProps, [Convert.kebabToCamel(name)]: object};
+                    });
+
+                    objectRules = {...objectRules, [divideRules[0]]: objectProps};
                 });
 
-                objectRules = {...objectRules, [divideRules[0]]: objectProps};
-            });
+                return objectRules;
+            }
 
-            return objectRules;
+            catch(e) { Log.error("UNKNOWN.STYLE_SYNTAX") }
         }
     }
 }
