@@ -4,9 +4,8 @@ import generateTags from "../../../functions/generateTags.js";
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
 
-    const pairs = { classic: [], special: [] };
+    const pairs = { classic: [], special: [], formatted: [] };
     let specialMd = [];
-    let formattedPairs = [];
     
     const mdCombinations = getMdCombinations();
     let addingDifference = 0;
@@ -18,6 +17,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         while(getMatches().length > 0) {
             pairs.classic = [];
             pairs.special = [];
+            pairs.formatted = [];
+
             specialMd = [];
             
             const currentMatches = getMatches();
@@ -112,52 +113,88 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     }
 
     function addPairs() {
-        formattedPairs.forEach(pair => {
+        const listContents = [];
+        pairs.formatted.forEach(pair => addPair(pair));
+
+        if(symbol.tag === "ol" || symbol.tag === "ul") parseList();
+
+        function addPair(pair) {
+            const parsedPair = parsePair(pair);
+            if(!parsedPair) return;
+
+            const { realPositions, validTags, innerContent, specialStatus } = parsedPair;
+
+            if(symbol.tag === "ol" || symbol.tag === "ul") {
+                const tagsMd = specialStatus ? specialStatus : innerContent[0];
+                
+                let exists = false;
+
+                listContents.forEach(listContent => {
+                    if(listContent.content === innerContent && listContent.md === tagsMd) exists = true;
+                });
+                
+                if(!exists) listContents.push({ content: innerContent, md: tagsMd, isSpecial: specialStatus ? true : false });
+            }
+
+            parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + innerContent + parsedContent.substring(realPositions.end);
+            addingDifference += validTags.opened.length;
+
+            if(pair.inner) pair.inner.forEach(innerPair => addPair(innerPair));
+
+            parsedContent = parsedContent.substring(0, pair.end + addingDifference) + validTags.closed + parsedContent.substring(pair.end + addingDifference);
+            addingDifference += validTags.closed.length;
+        }
+        
+        function parsePair(pair) {
             const specialStatus = parsedContent[pair.start + addingDifference] === "(" ? parsedContent[pair.start + addingDifference + 1] : false;
             const skipSpecialMd = specialStatus ? `(${specialStatus.length}${specialStatus === "1" ? "." : ""}<br>`.length : 0;
             
-            const realInnerContent = parsedContent.substring(pair.start + addingDifference + skipSpecialMd, pair.end + addingDifference);
-            
-            const innerContent = {
-                real: realInnerContent,
-                parsed: parseList(realInnerContent, specialStatus)
-            };
+            const innerContent = parsedContent.substring(pair.start + addingDifference + skipSpecialMd, pair.end + addingDifference);
 
-            if(symbol.tag === "ol" && (!innerContent.real.startsWith("1. ") && specialStatus !== "1" )) return;
-            
+            if(symbol.tag === "ol" && (!innerContent.startsWith("1. ") && specialStatus !== "1")) return false;
+
             const realPositions = { start: pair.start + addingDifference + skipSpecialMd, end: pair.end + addingDifference };
-            const innerContentDifference = Math.abs(innerContent.real.length - innerContent.parsed.length);
+            const validTags = getValidTags(innerContent, specialStatus);
 
-            const validTags = getValidTags(innerContent.real, specialStatus);
+            return { realPositions, validTags, innerContent, specialStatus };
+        }
 
-            parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + innerContent.parsed + validTags.closed + parsedContent.substring(realPositions.end);
-            addingDifference += validTags.opened.length + validTags.closed.length + innerContentDifference;
-        });
-
-        function parseList(content, specialStatus) {
-            if(symbol.tag !== "ol" && symbol.tag !== "ul") return content;
+        function parseList() {
+            let liAddingDifference = 0;
             
-            let parsedListContent = "";
+            listContents.forEach(liContent => {
+                console.log(liContent)
+                let parsedLiContent = "";
+                
+                const lines = liContent.content.split("\n");
+                let lineCounter = 0;
+                
+                lines.forEach(line => {
+                    if(!line) return;
+                    lineCounter++;
 
-            const lines = content.split("\n");
-            let lineCounter = 0;
-            
-            lines.forEach(line => {
-                if(!line) return;
-                lineCounter++;
+                    const tagsMd = symbol.tag === "ol" ? lineCounter : liContent.md;
+                    const liTags = generateTags(symbol, { tag: "li", md: tagsMd });
 
-                const tagsMd = specialStatus ? specialStatus : symbol.tag === "ol" ? lineCounter : line[0];
-                const liTags = generateTags(symbol, { tag: "li", md: tagsMd === "1" ? lineCounter : tagsMd });
+                    parsedLiContent += `${liTags.opened}${removeListMd(line, liContent.isSpecial)}${liTags.closed}`;
+                });
 
-                parsedListContent += `${liTags.opened}${removeListMd(line)}${liTags.closed}`;
+                const liMatches = [...parsedContent.matchAll(escapeRegex(liContent.content))];
+
+                liMatches.forEach(liMatch => {
+                    console.log(liMatch[0], parsedLiContent)
+                    const positions = { start: liMatch.index + liAddingDifference, end: liMatch[0].length + liMatch.index + liAddingDifference };
+                    parsedContent = parsedContent.substring(0, positions.start) + parsedLiContent + parsedContent.substring(positions.end);
+                    
+                    const difference = Math.abs(liContent.content - parsedLiContent);
+                    liAddingDifference += difference;
+                });
             });
-            
-            return parsedListContent;
 
-            function removeListMd(content) {
+            function removeListMd(content, isSpecial) {
                 let newContent = "";
     
-                let ignore = !specialStatus;
+                let ignore = !isSpecial;
                 let cancelIgnore = false;
     
                 const cancelTarget = symbol.tag === "ol" ? "." : " ";
@@ -174,6 +211,10 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 }
     
                 return newContent;
+            }
+
+            function escapeRegex(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/gm, "\\$&");
             }
         }
 
@@ -197,13 +238,56 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     }
 
     function formatPairs() {
-        formattedPairs = [...pairs.classic, ...pairs.special];
+        pairs.formatted = [...pairs.classic, ...pairs.special];
         let swap;
 
-        for(let i = 0; i < formattedPairs.length; i++) for(let j = i + 1; j < formattedPairs.length; j++) if(formattedPairs[i].start > formattedPairs[j].start) {
-            swap = formattedPairs[i];
-            formattedPairs[i] = formattedPairs[j];
-            formattedPairs[j] = swap;
+        for(let i = 0; i < pairs.formatted.length; i++) for(let j = i + 1; j < pairs.formatted.length; j++) if(pairs.formatted[i].start > pairs.formatted[j].start) {
+            swap = pairs.formatted[i];
+            pairs.formatted[i] = pairs.formatted[j];
+            pairs.formatted[j] = swap;
+        }
+
+        const innerFormatted = [];
+        const blocked = [];
+
+        pairs.formatted.forEach((pair, index) => {
+            if(checkBlocked(pair)) return;
+            innerFormatted.push({...pair, ...checkNestedPairs(index)});
+        });
+
+        pairs.formatted = innerFormatted;
+
+        function checkNestedPairs(index) {
+            let nested = { inner: [] };
+            
+            const currentPair = pairs.formatted[index];
+            let check = 1;
+
+            while(check !== 0) {
+                const nextPair = pairs.formatted[index + check];
+
+                if(nextPair && (currentPair.end > nextPair.start)) {
+                    if(!checkBlocked(nextPair)) nested.inner.push({...nextPair, ...checkNestedPairs(index + check)});
+                    check++;
+                }
+
+                else check = 0;
+            }
+
+            blocked.push(...nested.inner);
+            
+            if(nested.inner.length === 0) return {};
+            return nested;
+        }
+
+        function checkBlocked(pair) {
+            let result = false;
+            
+            blocked.forEach(block => {
+                if(pair.start === block.start && pair.end === block.end) result = true;
+            });
+
+            return result;
         }
     }
 
