@@ -160,10 +160,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         }
 
         function parseList() {
-            let liAddingDifference = 0;
-            
             listContents.forEach(liContent => {
-                console.log(liContent)
                 let parsedLiContent = "";
                 
                 const lines = liContent.content.split("\n");
@@ -180,13 +177,14 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 });
 
                 const liMatches = [...parsedContent.matchAll(escapeRegex(liContent.content))];
+                let liAddingDifference = 0;
 
                 liMatches.forEach(liMatch => {
                     console.log(liMatch[0], parsedLiContent)
                     const positions = { start: liMatch.index + liAddingDifference, end: liMatch[0].length + liMatch.index + liAddingDifference };
                     parsedContent = parsedContent.substring(0, positions.start) + parsedLiContent + parsedContent.substring(positions.end);
                     
-                    const difference = Math.abs(liContent.content - parsedLiContent);
+                    const difference = Math.abs(liContent.content.length - parsedLiContent.length);
                     liAddingDifference += difference;
                 });
             });
