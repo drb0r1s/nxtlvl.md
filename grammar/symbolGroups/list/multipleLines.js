@@ -133,7 +133,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                     if(listContent.content === innerContent && listContent.md === tagsMd) exists = true;
                 });
                 
-                if(!exists) listContents.push({ content: innerContent, md: tagsMd, isSpecial: specialStatus ? true : false });
+                if(!exists) listContents.push({ content: innerContent, md: tagsMd, isSpecial: specialStatus ? specialStatus : false });
             }
 
             parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + innerContent + parsedContent.substring(realPositions.end);
@@ -176,11 +176,58 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                     parsedLiContent += `${liTags.opened}${removeListMd(line, liContent.isSpecial)}${liTags.closed}`;
                 });
 
+                if(liContent.isSpecial) {
+                    const boundaries = [];
+                    const specialSymbol = liContent.isSpecial === "1" ? "1." : liContent.isSpecial;
+
+                    const innerSymbolsSearch = [...liContent.content.matchAll(`${escapeRegex("(" + specialSymbol)}<br>|${escapeRegex(specialSymbol + ")")}<br>`)];
+                    let i = 0;
+                    
+                    while(innerSymbolsSearch.length !== 0) {
+                        if(i === innerSymbolsSearch.length - 1) return i = 0;
+
+                        const current = { content: innerSymbolsSearch[i][0], index: innerSymbolsSearch[i].index };
+                        const next = { content: innerSymbolsSearch[i + 1][0], index: innerSymbolsSearch[i + 1].index };
+
+                        if(checkSymbolType(current.content) === "opened" && checkSymbolType(next.content) === "closed") {
+                            boundaries.push({ start: current.index, end: next.content.length + next.index  });
+                            innerSymbolsSearch.splice(i, 2);
+                            
+                            i = 0;
+                        }
+                        
+                        else i++;
+                    }
+
+                    let swap;
+                    
+                    for(let i = 0; i < boundaries.length; i++) for(let j = i + 1; j < boundaries.length; j++) if(boundaries[i].start > boundaries[j].start) {
+                        swap = boundaries[i];
+                        boundaries[i] = boundaries[j];
+                        boundaries[j] = swap;
+                    }
+
+                    let removingDifference = 0;
+
+                    boundaries.forEach(boundary => {
+                        const realPositions = { start: boundary.start - removingDifference, end: boundary.end - removingDifference };
+
+                        liContent.content = liContent.content.substring(0, realPositions.start) + liContent.content.substring(realPositions.end);
+                        removingDifference += boundary.start + boundary.end;
+                    });
+
+                    console.log(liContent.content)
+
+                    function checkSymbolType(symbol) {
+                        if(symbol[0] === "(") return "opened";
+                        return "closed"
+                    }
+                }
+
                 const liMatches = [...parsedContent.matchAll(escapeRegex(liContent.content))];
                 let liAddingDifference = 0;
 
                 liMatches.forEach(liMatch => {
-                    console.log(liMatch[0], parsedLiContent)
                     const positions = { start: liMatch.index + liAddingDifference, end: liMatch[0].length + liMatch.index + liAddingDifference };
                     parsedContent = parsedContent.substring(0, positions.start) + parsedLiContent + parsedContent.substring(positions.end);
                     
