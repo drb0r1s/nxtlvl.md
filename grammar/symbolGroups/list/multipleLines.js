@@ -163,21 +163,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             listContents.forEach(liContent => {
                 let parsedLiContent = "";
                 
-                const lines = liContent.content.split("\n");
-                let lineCounter = 0;
-                
-                lines.forEach(line => {
-                    if(!line) return;
-                    lineCounter++;
-
-                    const tagsMd = symbol.tag === "ol" ? lineCounter : liContent.md;
-                    const liTags = generateTags(symbol, { tag: "li", md: tagsMd });
-
-                    parsedLiContent += `${liTags.opened}${removeListMd(line, liContent.isSpecial)}${liTags.closed}`;
-                });
-
                 if(liContent.isSpecial) {
-                    const boundaries = [];
+                    let boundaries = [];
                     const specialSymbol = liContent.isSpecial === "1" ? "1." : liContent.isSpecial;
 
                     const innerSymbolsSearch = [...liContent.content.matchAll(`${escapeRegex("(" + specialSymbol)}<br>|${escapeRegex(specialSymbol + ")")}<br>`)];
@@ -207,22 +194,62 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                         boundaries[j] = swap;
                     }
 
+                    if(boundaries.length > 0) {
+                        const blockedBoundaries = [];
+                        let targetEnd = -1;
+
+                        for(let i = 0; i < boundaries.length; i++) {
+                            if(targetEnd > boundaries[i].start) blockedBoundaries.push(boundaries[i]);
+                            else targetEnd = boundaries[i].end;
+                        }
+
+                        const topBoundaries = [];
+
+                        for(let i = 0; i < boundaries.length; i++) {
+                            let status = true;
+                            
+                            blockedBoundaries.forEach(blockedBoundary => {
+                                if(boundaries[i].start === blockedBoundary.start && boundaries[i].end === blockedBoundary.end) status = false;
+                            });
+
+                            if(status) topBoundaries.push(boundaries[i]);
+                        }
+
+                        boundaries = topBoundaries;
+                    }
+
                     let removingDifference = 0;
 
                     boundaries.forEach(boundary => {
                         const realPositions = { start: boundary.start - removingDifference, end: boundary.end - removingDifference };
-
+                        
                         liContent.content = liContent.content.substring(0, realPositions.start) + liContent.content.substring(realPositions.end);
-                        removingDifference += boundary.start + boundary.end;
+                        removingDifference += boundary.end - boundary.start;
                     });
+
+                    const regex = /(?<!<br>)\n/gm;
+                    liContent.content = liContent.content.replace(regex, "");
 
                     console.log(liContent.content)
 
                     function checkSymbolType(symbol) {
                         if(symbol[0] === "(") return "opened";
-                        return "closed"
+                        return "closed";
                     }
                 }
+                
+                const lines = liContent.content.split("\n");
+                let lineCounter = 0;
+                
+                lines.forEach(line => {
+                    if(!line) return;
+                    lineCounter++;
+
+                    const tagsMd = symbol.tag === "ol" ? lineCounter : liContent.md;
+                    const liTags = generateTags(symbol, { tag: "li", md: tagsMd });
+
+                    parsedLiContent += `${liTags.opened}${removeListMd(line, liContent.isSpecial)}${liTags.closed}`;
+                });
 
                 const liMatches = [...parsedContent.matchAll(escapeRegex(liContent.content))];
                 let liAddingDifference = 0;
