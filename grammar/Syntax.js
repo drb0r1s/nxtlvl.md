@@ -29,7 +29,7 @@ const Syntax = {
 
         multipleLines: [
             { tag: "blockquote", md: ">" },
-            { tag: "ol", md: "[0-9]+\.(\\s|(?=\\)?<br>))" },
+            { tag: "ol", md: "(\\s+)?[0-9]+\.(\\s|(?=\\)?<br>))" },
             { tag: "ul", md: "[*+-]" }
         ],
     },

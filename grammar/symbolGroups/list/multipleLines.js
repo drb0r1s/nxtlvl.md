@@ -1,5 +1,6 @@
 import Syntax from "../../Syntax.js";
 import generateTags from "../../../functions/generateTags.js";
+import escapeRegex from "../../../functions/escapeRegex.js";
 
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
@@ -230,8 +231,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                     const regex = /(?<!<br>)\n/gm;
                     liContent.content = liContent.content.replace(regex, "");
 
-                    console.log(liContent.content)
-
                     function checkSymbolType(symbol) {
                         if(symbol[0] === "(") return "opened";
                         return "closed";
@@ -283,10 +282,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 }
     
                 return newContent;
-            }
-
-            function escapeRegex(string) {
-                return string.replace(/[.*+?^${}()|[\]\\]/gm, "\\$&");
             }
         }
 
