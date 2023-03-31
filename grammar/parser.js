@@ -1,5 +1,6 @@
 import parseSymbolGroups from "./symbolGroups/parseSymbolGroups.js";
 import escapeRegex from "../functions/escapeRegex.js";
+import whitespaceCounter from "../functions/whitespaceCounter.js";
 
 export default function parser(content) {
     let parsedContent = content;
@@ -51,18 +52,7 @@ export default function parser(content) {
 
                     break;
                 case "innerList":
-                    for(let i = 0; i < realInnerListMatches.length; i++) {
-                        let newLi = "";
-                        let ignore = true;
-
-                        for(let j = 0; j < realInnerListMatches[i].length; j++) {
-                            if(ignore && realInnerListMatches[i][j] !== " ") ignore = false;
-                            if(!ignore) newLi += realInnerListMatches[i][j];
-                        }
-
-                        const regex = new RegExp(escapeRegex(newLi), "gm");
-                        parsedContent = parsedContent.replace(regex, ` ${newLi}`);
-                    }
+                    const innerMatches = formatInnerMatches(realInnerListMatches);
 
                     potentialInnerListMatches = [];
                     realInnerListMatches = [];
@@ -73,42 +63,55 @@ export default function parser(content) {
         });
 
         function checkPotentialInnerListMatches() {
-            let prevReal = false;
-            
+            const realMatches = [];
+            let realMatchBlock = [];
+
+            let parentSpaces = -1;
+
             for(let i = 0; i < potentialInnerListMatches.length; i++) {
                 const current = potentialInnerListMatches[i];
                 const next = potentialInnerListMatches[i + 1];
                 
-                if(
-                    next &&
-                    (whitespaceCounter(current.content) < whitespaceCounter(next.content)) &&
-                    (current.content.length + current.position + 1 === next.position)
-                ) {
-                    prevReal = true;
-                    realInnerListMatches.push(next.content);
+                if(next && (current.content.length + current.position + 1 === next.position)) {
+                    realMatchBlock.push(next.content);
+                    if(parentSpaces === -1) parentSpaces = whitespaceCounter(current.content);
                 }
 
-                else if(
-                    next &&
-                    prevReal &&
-                    (whitespaceCounter(current.content) === whitespaceCounter(next.content)) &&
-                    (current.content.length + current.position + 1 === next.position)
-                ) realInnerListMatches.push(next.content);
+                else if(realMatchBlock.length > 0 && parentSpaces > -1) {
+                    realMatches.push({ matches: realMatchBlock, spaces: parentSpaces });
+                    realMatchBlock = [];
 
-                else prevReal = false;
-            }
-            
-            function whitespaceCounter(string) {
-                let status = true;
-                let counter = 0;
-
-                while(status) {
-                    if(string[counter] === " ") counter++;
-                    else status = false;
+                    parentSpaces = -1;
                 }
-
-                return counter;
             }
+
+            realMatches.forEach(realMatch => {
+                const childrenBlock = [];
+                
+                realMatch.matches.forEach(match => {
+                    if(realMatch.spaces < whitespaceCounter(match)) childrenBlock.push(match)
+                });
+
+                if(childrenBlock.length > 0) realInnerListMatches.push(childrenBlock);
+            });
+        }
+
+        function formatInnerMatches(matches) {
+            console.log(matches)
+            const formattedMatches = [];
+
+            matches.forEach(match => {
+                let coreSpace = -1;
+
+                
+            });
+        }
+
+        function getListOrder(li) {
+            let order = -1;
+            for(let i = 0; i < li.length; i++) if(order === -1 && li[i] !== " ") order = li[i];
+
+            return order;
         }
     }
 }

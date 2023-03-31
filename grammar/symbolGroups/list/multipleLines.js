@@ -7,6 +7,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
     const pairs = { classic: [], special: [], formatted: [] };
     let specialMd = [];
+
+    //console.log(matches)
     
     const mdCombinations = getMdCombinations();
     let addingDifference = 0;
@@ -120,10 +122,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         if(symbol.tag === "ol" || symbol.tag === "ul") parseList();
 
         function addPair(pair) {
-            const parsedPair = parsePair(pair);
-            if(!parsedPair) return;
-
-            const { realPositions, validTags, innerContent, specialStatus } = parsedPair;
+            const { realPositions, validTags, innerContent, specialStatus } = parsePair(pair);
 
             if(symbol.tag === "ol" || symbol.tag === "ul") {
                 const tagsMd = specialStatus ? specialStatus : innerContent[0];
@@ -148,11 +147,9 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         
         function parsePair(pair) {
             const specialStatus = parsedContent[pair.start + addingDifference] === "(" ? parsedContent[pair.start + addingDifference + 1] : false;
-            const skipSpecialMd = specialStatus ? `(${specialStatus.length}${specialStatus === "1" ? "." : ""}<br>`.length : 0;
+            const skipSpecialMd = specialStatus ? `(${specialStatus.length}${!isNaN(parseInt(specialStatus)) ? "." : ""}<br>`.length : 0;
             
             const innerContent = parsedContent.substring(pair.start + addingDifference + skipSpecialMd, pair.end + addingDifference);
-
-            if(symbol.tag === "ol" && (!innerContent.startsWith("1. ") && specialStatus !== "1")) return false;
 
             const realPositions = { start: pair.start + addingDifference + skipSpecialMd, end: pair.end + addingDifference };
             const validTags = getValidTags(innerContent, specialStatus);
@@ -166,7 +163,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 
                 if(liContent.isSpecial) {
                     let boundaries = [];
-                    const specialSymbol = liContent.isSpecial === "1" ? "1." : liContent.isSpecial;
+                    const specialSymbol = !isNaN(parseInt(liContent.isSpecial)) ? `${liContent.isSpecial}.` : liContent.isSpecial;
 
                     const innerSymbolsSearch = [...liContent.content.matchAll(`${escapeRegex("(" + specialSymbol)}<br>|${escapeRegex(specialSymbol + ")")}<br>`)];
                     let i = 0;
@@ -290,16 +287,16 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
             let tagsMd = specialStatus ? specialStatus : innerContent[0];
 
-            if(tagsMd === "1") {
+            if(!isNaN(parseInt(tagsMd))) {
                 const lines = innerContent.split("\n");
 
-                let counter = 0;
+                let counter = parseInt(tagsMd);
                 for(let i = 0; i < lines.length; i++) if(lines[i]) counter++;
 
-                tagsMd = `1-${counter}`;
+                tagsMd = `${tagsMd}-${counter}`;
             }
 
-            const listTags = generateTags(symbol, { md: tagsMd });
+            const listTags = generateTags(symbol, { md: tagsMd }, { start: tagsMd });
             return listTags;
         }
     }
