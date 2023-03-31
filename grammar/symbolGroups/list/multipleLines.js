@@ -68,9 +68,9 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
         function specialMdSearch(match) {
             let result = false;
-            const specialPair = isPairSpecial(match.md);
+            const specialStatus = isPairSpecial(match.md);
             
-            if(specialPair) {
+            if(specialStatus) {
                 result = true;
                 specialMd.push({ type: match.md[0] === "(" ? "opened" : "closed", position: match.position });
             }
@@ -125,7 +125,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             const { realPositions, validTags, innerContent, specialStatus } = parsePair(pair);
 
             if(symbol.tag === "ol" || symbol.tag === "ul") {
-                const tagsMd = specialStatus ? specialStatus : innerContent[0];
+                const tagsMd = specialStatus ? specialStatus: innerContent[0];
                 
                 let exists = false;
 
@@ -133,7 +133,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                     if(listContent.content === innerContent && listContent.md === tagsMd) exists = true;
                 });
                 
-                if(!exists) listContents.push({ content: innerContent, md: tagsMd, isSpecial: specialStatus ? specialStatus : false });
+                if(!exists) listContents.push({ content: innerContent, md: tagsMd, isSpecial: specialStatus });
             }
 
             parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + innerContent + parsedContent.substring(realPositions.end);
@@ -146,7 +146,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         }
         
         function parsePair(pair) {
-            const specialStatus = parsedContent[pair.start + addingDifference] === "(" ? parsedContent[pair.start + addingDifference + 1] : false;
+            const specialStatus = isPairSpecial(parsedContent.substring(pair.start + addingDifference));
             const skipSpecialMd = specialStatus ? `(${specialStatus.length}${!isNaN(parseInt(specialStatus)) ? "." : ""}<br>`.length : 0;
             
             const innerContent = parsedContent.substring(pair.start + addingDifference + skipSpecialMd, pair.end + addingDifference);
@@ -286,6 +286,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             if(symbol.tag !== "ol" &&  symbol.tag !== "ul") return tags;
 
             let tagsMd = specialStatus ? specialStatus : innerContent[0];
+            const startValue = !isNaN(parseInt(tagsMd)) ? { start: tagsMd } : {};
 
             if(!isNaN(parseInt(tagsMd))) {
                 const lines = innerContent.split("\n");
@@ -296,7 +297,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 tagsMd = `${tagsMd}-${counter}`;
             }
 
-            const listTags = generateTags(symbol, { md: tagsMd }, { start: tagsMd });
+            const listTags = generateTags(symbol, { md: tagsMd }, startValue);
             return listTags;
         }
     }
@@ -359,7 +360,19 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         let result = false;
         
         mdCombinations.forEach(combination => {
-            if(content.startsWith(`(${combination}<br>`) || content.startsWith(`${combination})<br>`)) result = combination;
+            if(combination === "number") {                
+                let i = content[0] === "(" ? 1 : 0;
+                let number = "";
+                
+                while(!isNaN(parseInt(content[i]))) {
+                    number += content[i];
+                    i++;
+                }
+
+                if(content.startsWith(`(${number}.<br>`) || content.startsWith(`${number}.)<br>`)) result = number;
+            }
+            
+            else if(content.startsWith(`(${combination}<br>`) || content.startsWith(`${combination})<br>`)) result = combination;
         });
 
         return result;
@@ -370,7 +383,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         
         switch(symbol.tag) {
             case "ol": 
-                result.push("1.");
+                result.push("number");
                 break;
             case "ul":
                 result.push("*", "+", "-");
