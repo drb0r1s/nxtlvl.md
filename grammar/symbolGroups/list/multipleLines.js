@@ -58,9 +58,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         let pairTemplate = {};
 
         matches.forEach((match, index) => {
-            const specialMdStatus = specialMdSearch(match);
-            if(specialMdStatus) return;
-
+            if(specialMdSearch(match)) return;
             classicSearch(match, matches[index + 1]);
         });
 
@@ -125,7 +123,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             const { realPositions, validTags, innerContent, specialStatus } = parsePair(pair);
 
             if(symbol.tag === "ol" || symbol.tag === "ul") {
-                const tagsMd = specialStatus ? specialStatus: innerContent[0];
+                const tagsMd = specialStatus ? specialStatus: getClassicMd(innerContent);
                 
                 let exists = false;
 
@@ -147,7 +145,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         
         function parsePair(pair) {
             const specialStatus = isPairSpecial(parsedContent.substring(pair.start + addingDifference));
-            const skipSpecialMd = specialStatus ? `(${specialStatus.length}${!isNaN(parseInt(specialStatus)) ? "." : ""}<br>`.length : 0;
+            const skipSpecialMd = getSpecialMdLength();
             
             const innerContent = parsedContent.substring(pair.start + addingDifference + skipSpecialMd, pair.end + addingDifference);
 
@@ -155,6 +153,22 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             const validTags = getValidTags(innerContent, specialStatus);
 
             return { realPositions, validTags, innerContent, specialStatus };
+
+            function getSpecialMdLength() {
+                if(!specialStatus) return 0;
+
+                const elements = {
+                    start: "(",
+                    md: specialStatus,
+                    additional: !isNaN(parseInt(specialStatus)) ? "." : "",
+                    break: "<br>"
+                };
+
+                let length = 0;
+                Object.values(elements).forEach(element => { length += element.length });
+
+                return length;
+            }
         }
 
         function parseList() {
@@ -235,16 +249,16 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 }
                 
                 const lines = liContent.content.split("\n");
-                let lineCounter = 0;
+                let lineCounter = symbol.tag === "ol" ? parseInt(liContent.md) : 0;
                 
                 lines.forEach(line => {
                     if(!line) return;
-                    lineCounter++;
-
+                    
                     const tagsMd = symbol.tag === "ol" ? lineCounter : liContent.md;
                     const liTags = generateTags(symbol, { tag: "li", md: tagsMd });
 
                     parsedLiContent += `${liTags.opened}${removeListMd(line, liContent.isSpecial)}${liTags.closed}`;
+                    lineCounter++;
                 });
 
                 const liMatches = [...parsedContent.matchAll(escapeRegex(liContent.content))];
@@ -285,7 +299,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         function getValidTags(innerContent, specialStatus) {
             if(symbol.tag !== "ol" &&  symbol.tag !== "ul") return tags;
 
-            let tagsMd = specialStatus ? specialStatus : innerContent[0];
+            let tagsMd = specialStatus ? specialStatus : getClassicMd(innerContent);
             const startValue = !isNaN(parseInt(tagsMd)) ? { start: tagsMd } : {};
 
             if(!isNaN(parseInt(tagsMd))) {
@@ -294,11 +308,25 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 let counter = parseInt(tagsMd);
                 for(let i = 0; i < lines.length; i++) if(lines[i]) counter++;
 
-                tagsMd = `${tagsMd}-${counter}`;
+                tagsMd = `${tagsMd}-${counter - 1}`;
             }
 
             const listTags = generateTags(symbol, { md: tagsMd }, startValue);
             return listTags;
+        }
+
+        function getClassicMd(innerContent) {
+            if(isNaN(parseInt(innerContent[0]))) return innerContent[0];
+
+            let number = "";
+            let i = 0;
+
+            while(!isNaN(parseInt(innerContent[i]))) {
+                number += innerContent[i];
+                i++;
+            }
+
+            return number;
         }
     }
 

@@ -12,12 +12,13 @@ const defaultStyleRules = {
 
     "nxtlvl.multiple-lines.ol": {
         listStyleType: "decimal",
-        margin: "5px 0px 5px 30px"
+        listStylePosition: "inside",
+        margin: "5px 0px 5px 20px"
     },
 
     "nxtlvl.multiple-lines.ul": {
         listStyleType: "disc",
-        margin: "5px 0px 5px 30px"
+        margin: "5px 0px 5px 20px"
     }
 };
 
