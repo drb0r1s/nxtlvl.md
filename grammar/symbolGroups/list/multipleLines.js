@@ -8,7 +8,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     const pairs = { classic: [], special: [], formatted: [] };
     let specialMd = [];
 
-    //console.log(matches)
+    console.log(matches)
     
     const mdCombinations = getMdCombinations();
     let addingDifference = 0;

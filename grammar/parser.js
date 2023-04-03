@@ -43,7 +43,16 @@ export default function parser(content) {
 
                     checkPotentialInnerListMatches();
                     
-                    matches.all.forEach(match => {
+                    matches.all.forEach((match, index) => {
+                        const potentialInnerListMatch = matches.potentialInnerList[index];
+                        let block = false;
+                        
+                        for(let i = 0; i < realInnerListMatches.length; i++) for(let j = 0; j < realInnerListMatches[i].length; j++) {
+                            if(potentialInnerListMatch[0] === realInnerListMatches[i][j]) block = true;
+                        }
+
+                        if(block) return;
+
                         const realPositions = { start: match.index - removingDifference, end: match[0].length + match.index - removingDifference };
         
                         parsedContent = parsedContent.substring(0, realPositions.start) + parsedContent.substring(realPositions.end);
@@ -53,6 +62,13 @@ export default function parser(content) {
                     break;
                 case "innerList":
                     const innerMatches = formatInnerMatches(realInnerListMatches);
+                    const mergedRealInnerListMatches = [];
+
+                    for(let i = 0; i < realInnerListMatches.length; i++) mergedRealInnerListMatches.push(...realInnerListMatches[i]);
+                    
+                    for(let i = 0; i < mergedRealInnerListMatches.length; i++) {
+                        parsedContent = parsedContent.replaceAll(mergedRealInnerListMatches[i], innerMatches[i]);
+                    }
 
                     potentialInnerListMatches = [];
                     realInnerListMatches = [];
@@ -96,22 +112,46 @@ export default function parser(content) {
             });
         }
 
-        function formatInnerMatches(matches) {
-            console.log(matches)
+        function formatInnerMatches(matches) {            
             const formattedMatches = [];
-
+            
             matches.forEach(match => {
-                let coreSpace = -1;
+                const levels = [];
 
-                
+                match.forEach(line => {
+                    const spaces = whitespaceCounter(line);
+                    if(levels.length === 0 || levels[levels.length - 1] < spaces) levels.push(spaces);
+                });
+
+                match.forEach(line => {
+                    const spaces = whitespaceCounter(line);
+                    let level = 0;
+
+                    for(let i = levels.length - 1; i >= 0; i--) if(spaces <= levels[i]) level = i + 1;
+
+                    const noSpacesLine = cutStartingSpaces(line);
+                    let formattedLine = "";
+
+                    for(let i = 0; i < level; i++) formattedLine += " ";
+                    formattedLine += noSpacesLine;
+                    
+                    formattedMatches.push(formattedLine);
+                });
             });
-        }
 
-        function getListOrder(li) {
-            let order = -1;
-            for(let i = 0; i < li.length; i++) if(order === -1 && li[i] !== " ") order = li[i];
+            return formattedMatches;
 
-            return order;
+            function cutStartingSpaces(string) {
+                let newString = "";
+                let ignore = true;
+
+                for(let i = 0; i < string.length; i++) {
+                    if(ignore && string[i] !== " ") ignore = false;
+                    if(!ignore) newString += string[i];
+                }
+
+                return newString;
+            }
         }
     }
 }
