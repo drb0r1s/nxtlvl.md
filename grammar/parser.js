@@ -1,6 +1,5 @@
 import parseSymbolGroups from "./symbolGroups/parseSymbolGroups.js";
-import escapeRegex from "../functions/escapeRegex.js";
-import whitespaceCounter from "../functions/whitespaceCounter.js";
+import StartSpaces from "../functions/StartSpaces.js";
 
 export default function parser(content) {
     let parsedContent = content;
@@ -90,7 +89,7 @@ export default function parser(content) {
                 
                 if(next && (current.content.length + current.position + 1 === next.position)) {
                     realMatchBlock.push(next.content);
-                    if(parentSpaces === -1) parentSpaces = whitespaceCounter(current.content);
+                    if(parentSpaces === -1) parentSpaces = StartSpaces.counter(current.content);
                 }
 
                 else if(realMatchBlock.length > 0 && parentSpaces > -1) {
@@ -105,7 +104,7 @@ export default function parser(content) {
                 const childrenBlock = [];
                 
                 realMatch.matches.forEach(match => {
-                    if(realMatch.spaces < whitespaceCounter(match)) childrenBlock.push(match)
+                    if(realMatch.spaces < StartSpaces.counter(match)) childrenBlock.push(match)
                 });
 
                 if(childrenBlock.length > 0) realInnerListMatches.push(childrenBlock);
@@ -119,17 +118,17 @@ export default function parser(content) {
                 const levels = [];
 
                 match.forEach(line => {
-                    const spaces = whitespaceCounter(line);
+                    const spaces = StartSpaces.counter(line);
                     if(levels.length === 0 || levels[levels.length - 1] < spaces) levels.push(spaces);
                 });
 
                 match.forEach(line => {
-                    const spaces = whitespaceCounter(line);
+                    const spaces = StartSpaces.counter(line);
                     let level = 0;
 
                     for(let i = levels.length - 1; i >= 0; i--) if(spaces <= levels[i]) level = i + 1;
 
-                    const noSpacesLine = cutStartingSpaces(line);
+                    const noSpacesLine = StartSpaces.cut(line);
                     let formattedLine = "";
 
                     for(let i = 0; i < level; i++) formattedLine += " ";
@@ -140,18 +139,6 @@ export default function parser(content) {
             });
 
             return formattedMatches;
-
-            function cutStartingSpaces(string) {
-                let newString = "";
-                let ignore = true;
-
-                for(let i = 0; i < string.length; i++) {
-                    if(ignore && string[i] !== " ") ignore = false;
-                    if(!ignore) newString += string[i];
-                }
-
-                return newString;
-            }
         }
     }
 }
