@@ -1,7 +1,7 @@
-const StartSpaces = { counter, cut };
+const StartSpaces = { count, cut };
 export default StartSpaces;
 
-function counter(string) {
+function count(string) {
     let status = true;
     let counter = 0;
 

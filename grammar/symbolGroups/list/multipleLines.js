@@ -62,8 +62,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             classicSearch(match, matches[index + 1]);
         });
 
-        console.log(symbol.tag, pairs.classic)
-
         let swap;
         
         for(let i = 0; i < pairs.classic.length; i++) for(let j = i + 1; j < pairs.classic.length; j++) if(pairs.classic[i].start > pairs.classic[j].start) {
@@ -135,8 +133,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             
             if(inner.starts.length === 0 || addNew) inner.starts.push(addNew || inner.pairTemplates[inner.pairTemplates.length - 1].start);
             
-            const prevLine = StartSpaces.counter(parsedContent.substring(inner.pairTemplates[inner.pairTemplates.length - 1].start, inner.pairTemplates[inner.pairTemplates.length - 1].end));
-            const line = StartSpaces.counter(parsedContent.substring(nextMatch.position, nextMatch.position + nextMatch.md.length));
+            const prevLine = StartSpaces.count(parsedContent.substring(inner.pairTemplates[inner.pairTemplates.length - 1].start, inner.pairTemplates[inner.pairTemplates.length - 1].end));
+            const line = StartSpaces.count(parsedContent.substring(nextMatch.position, nextMatch.position + nextMatch.md.length));
 
             if(prevLine === line) inner.starts.forEach(start => updateInnerPairTemplate(start, { end: nextMatch.position + nextMatch.md.length }));
             
@@ -216,8 +214,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         function parseList() {
             listContents.forEach(liContent => {
                 let parsedLiContent = "";
-
-                //console.log(liContent.content)
                 
                 if(liContent.isSpecial) {
                     let boundaries = [];
@@ -292,6 +288,17 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                     }
                 }
                 
+                else {
+                    let newLiContent = "";
+                    
+                    const lines = liContent.content.split("\n");
+                    const requiredSpaces = StartSpaces.count(lines[0]);
+
+                    lines.forEach(line => { if(requiredSpaces === StartSpaces.count(line)) newLiContent += line + "\n" });
+
+                    liContent.content = newLiContent;
+                }
+                
                 const lines = liContent.content.split("\n");
                 let lineCounter = symbol.tag === "ol" ? parseInt(liContent.md) : 0;
                 
@@ -352,7 +359,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 let counter = parseInt(tagsMd);
                 for(let i = 0; i < lines.length; i++) if(lines[i]) counter++;
 
-                tagsMd = `${tagsMd}-${counter - 1}`;
+                if(parseInt(tagsMd) !== counter - 1) tagsMd = `${tagsMd}-${counter - 1}`;
             }
 
             const listTags = generateTags(symbol, { md: tagsMd }, startValue);
