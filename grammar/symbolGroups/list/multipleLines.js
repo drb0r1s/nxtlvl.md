@@ -1,15 +1,13 @@
 import Syntax from "../../Syntax.js";
 import generateTags from "../../../functions/generateTags.js";
 import escapeRegex from "../../../functions/escapeRegex.js";
-import whitespaceCounter from "../../../functions/whitespaceCounter.js";
+import StartSpaces from "../../../functions/StartSpaces.js";
 
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
 
     const pairs = { classic: [], special: [], formatted: [] };
     let specialMd = [];
-
-    console.log(matches)
     
     const mdCombinations = getMdCombinations();
     let addingDifference = 0;
@@ -57,12 +55,14 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
     function getPairs(matches) {
         let pairTemplate = {};
-        let innerPairTemplate = {};
+        const inner = { pairTemplates: [], starts: [] };
 
         matches.forEach((match, index) => {
             if(specialMdSearch(match)) return;
             classicSearch(match, matches[index + 1]);
         });
+
+        console.log(symbol.tag, pairs.classic)
 
         let swap;
         
@@ -116,23 +116,41 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
             if(!nextMatch || (eol + 1 !== nextMatch.position)) {
                 pairs.classic.push(pairTemplate);
-                if(Object.keys(innerPairTemplate).length > 0) pairs.classic.push(innerPairTemplate);
+                if(inner.pairTemplates.length > 0) pairs.classic.push(...inner.pairTemplates);
 
                 pairTemplate = {};
-                innerPairTemplate = {};
+                inner.pairTemplates = [];
             }
 
             else if(eol + 1 === nextMatch.position) {
-                if(parsedContent[nextMatch.position] === " ") {
-                    if(Object.keys(innerPairTemplate).length === 0) return innerPairTemplate = { start: nextMatch.position, end: nextMatch.position + nextMatch.md.length };
-
-                    const prevLine = whitespaceCounter(parsedContent.substring(innerPairTemplate.start, innerPairTemplate.end));
-                    const line = whitespaceCounter(parsedContent.substring(nextMatch.position, nextMatch.position + nextMatch.md.length));
-
-                    if(prevLine === line) innerPairTemplate = {...innerPairTemplate, end: nextMatch.position + nextMatch.md.length};
-                };
+                if(parsedContent[nextMatch.position] === " ") formatInnerPairTemplate(nextMatch);
 
                 pairTemplate = {...pairTemplate, end: nextMatch.position + nextMatch.md.length};
+            }
+        }
+
+        function formatInnerPairTemplate(nextMatch, addNew) {
+            if(inner.pairTemplates.length === 0) return inner.pairTemplates.push({ start: nextMatch.position, end: nextMatch.position + nextMatch.md.length });
+            if(addNew) inner.pairTemplates.push({ start: nextMatch.position, end: nextMatch.position + nextMatch.md.length });
+            
+            if(inner.starts.length === 0 || addNew) inner.starts.push(addNew || inner.pairTemplates[inner.pairTemplates.length - 1].start);
+            
+            const prevLine = StartSpaces.counter(parsedContent.substring(inner.pairTemplates[inner.pairTemplates.length - 1].start, inner.pairTemplates[inner.pairTemplates.length - 1].end));
+            const line = StartSpaces.counter(parsedContent.substring(nextMatch.position, nextMatch.position + nextMatch.md.length));
+
+            if(prevLine === line) inner.starts.forEach(start => updateInnerPairTemplate(start, { end: nextMatch.position + nextMatch.md.length }));
+            
+            if(prevLine < line) formatInnerPairTemplate(nextMatch, nextMatch.position);
+
+            function updateInnerPairTemplate(start, value) {
+                let newInnerPairTemplates = [];
+
+                for(let i = 0; i < inner.pairTemplates.length; i++) {
+                    if(start === inner.pairTemplates[i].start) newInnerPairTemplates.push({...inner.pairTemplates[i], ...value});
+                    else newInnerPairTemplates.push(inner.pairTemplates[i]);
+                }
+
+                inner.pairTemplates = newInnerPairTemplates;
             }
         }
     }
@@ -198,6 +216,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         function parseList() {
             listContents.forEach(liContent => {
                 let parsedLiContent = "";
+
+                //console.log(liContent.content)
                 
                 if(liContent.isSpecial) {
                     let boundaries = [];
@@ -281,7 +301,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                     const tagsMd = symbol.tag === "ol" ? lineCounter : liContent.md;
                     const liTags = generateTags(symbol, { tag: "li", md: tagsMd });
 
-                    parsedLiContent += `${liTags.opened}${removeListMd(line, liContent.isSpecial)}${liTags.closed}`;
+                    parsedLiContent += `${liTags.opened}${removeListMd(StartSpaces.cut(line), liContent.isSpecial)}${liTags.closed}`;
                     lineCounter++;
                 });
 
@@ -340,13 +360,15 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         }
 
         function getClassicMd(innerContent) {
-            if(isNaN(parseInt(innerContent[0]))) return innerContent[0];
+            const noSpacesContent = StartSpaces.cut(innerContent);
+
+            if(isNaN(parseInt(noSpacesContent[0]))) return noSpacesContent[0];
 
             let number = "";
             let i = 0;
 
-            while(!isNaN(parseInt(innerContent[i]))) {
-                number += innerContent[i];
+            while(!isNaN(parseInt(noSpacesContent[i]))) {
+                number += noSpacesContent[i];
                 i++;
             }
 
