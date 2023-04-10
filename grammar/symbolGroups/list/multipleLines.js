@@ -213,8 +213,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
         function parseList() {
             listContents.forEach(liContent => {
-                let parsedLiContent = "";
-                
                 if(liContent.isSpecial) {
                     let boundaries = [];
                     const specialSymbol = !isNaN(parseInt(liContent.isSpecial)) ? `${liContent.isSpecial}.` : liContent.isSpecial;
@@ -279,8 +277,31 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                         removingDifference += boundary.end - boundary.start;
                     });
 
-                    const regex = /(?<!<br>)\n/gm;
+                    const regex = /(?<!<br>)\n/;
                     liContent.content = liContent.content.replace(regex, "");
+
+                    let newLiContent = "";
+                    const topLiContent = [];
+
+                    const lines = liContent.content.split("\n");
+
+                    lines.forEach((line, index) => {
+                        if(line) {
+                            newLiContent += line + "\n";
+
+                            if(index === lines.length - 1) {
+                                topLiContent.push(newLiContent);
+                                newLiContent = "";
+                            }
+                        }
+
+                        else if(newLiContent) {
+                            topLiContent.push(newLiContent);
+                            newLiContent = "";
+                        }
+                    });
+
+                    addLi(topLiContent);
 
                     function checkSymbolType(symbol) {
                         if(symbol[0] === "(") return "opened";
@@ -290,38 +311,61 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 
                 else {
                     let newLiContent = "";
+                    const topLiContent = [];
                     
                     const lines = liContent.content.split("\n");
                     const requiredSpaces = StartSpaces.count(lines[0]);
 
-                    lines.forEach(line => { if(requiredSpaces === StartSpaces.count(line)) newLiContent += line + "\n" });
+                    lines.forEach((line, index) => {
+                        if(requiredSpaces === StartSpaces.count(line)) {
+                            newLiContent += line + "\n";
 
-                    liContent.content = newLiContent;
+                            if(index === lines.length - 1) {
+                                topLiContent.push(newLiContent.substring(0, newLiContent.length - 1));
+                                newLiContent = "";
+                            }
+                        }
+                        
+                        else if(newLiContent) {
+                            topLiContent.push(newLiContent.substring(0, newLiContent.length - 1));
+                            newLiContent = "";
+                        }
+                    });
+
+                    addLi(topLiContent);
                 }
                 
-                const lines = liContent.content.split("\n");
-                let lineCounter = symbol.tag === "ol" ? parseInt(liContent.md) : 0;
-                
-                lines.forEach(line => {
-                    if(!line) return;
+                function addLi(rows) {
+                    let parsedLiContent = "";
+                    let lineCounter = symbol.tag === "ol" ? parseInt(liContent.md) : 0;
                     
-                    const tagsMd = symbol.tag === "ol" ? lineCounter : liContent.md;
-                    const liTags = generateTags(symbol, { tag: "li", md: tagsMd });
+                    rows.forEach(row => {
+                        const lines = row.split("\n");
 
-                    parsedLiContent += `${liTags.opened}${removeListMd(StartSpaces.cut(line), liContent.isSpecial)}${liTags.closed}`;
-                    lineCounter++;
-                });
+                        lines.forEach(line => {
+                            if(!line) return;
+                        
+                            const tagsMd = symbol.tag === "ol" ? lineCounter : liContent.md;
+                            const liTags = generateTags(symbol, { tag: "li", md: tagsMd });
+        
+                            parsedLiContent += `${liTags.opened}${removeListMd(StartSpaces.cut(line), liContent.isSpecial)}${liTags.closed}`;
+                            lineCounter++;
+                        });
 
-                const liMatches = [...parsedContent.matchAll(escapeRegex(liContent.content))];
-                let liAddingDifference = 0;
+                        const liMatches = [...parsedContent.matchAll(escapeRegex(row))];
+                        let liAddingDifference = 0;
+        
+                        liMatches.forEach(liMatch => {
+                            const positions = { start: liMatch.index + liAddingDifference, end: liMatch[0].length + liMatch.index + liAddingDifference };
+                            parsedContent = parsedContent.substring(0, positions.start) + parsedLiContent + parsedContent.substring(positions.end);
+                            
+                            const difference = Math.abs(row.length - parsedLiContent.length);
+                            liAddingDifference += difference;
 
-                liMatches.forEach(liMatch => {
-                    const positions = { start: liMatch.index + liAddingDifference, end: liMatch[0].length + liMatch.index + liAddingDifference };
-                    parsedContent = parsedContent.substring(0, positions.start) + parsedLiContent + parsedContent.substring(positions.end);
-                    
-                    const difference = Math.abs(liContent.content.length - parsedLiContent.length);
-                    liAddingDifference += difference;
-                });
+                            parsedLiContent = "";
+                        });
+                    });
+                }
             });
 
             function removeListMd(content, isSpecial) {

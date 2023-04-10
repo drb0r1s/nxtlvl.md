@@ -18,6 +18,7 @@ const defaultStyleRules = {
 
     "nxtlvl.multiple-lines.ul": {
         listStyleType: "disc",
+        listStylePosition: "inside",
         margin: "5px 0px 5px 20px"
     }
 };
