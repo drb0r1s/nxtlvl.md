@@ -67,8 +67,9 @@ function log(type, id, props) {
         if(prop) validContent = validContent.replaceAll(`{${logProp}}`, prop);
     });
 
-    const logContent = `NTLVL.md ${type === "error" ? "Error" : "Warning"}: ${validContent} (${id})`;
+    const logContent = `NTLVL.md ${type === "error" ? "Error" : "Warning"}: ${validContent}\nAt: ${getLocation()} (${id})`;
     type === "error" ? console.error(logContent) : console.warn(logContent);
+    getLocation();
 
     const logContentHTML = logContent.replaceAll("\n", "<br>");
     return logContentHTML;
@@ -93,4 +94,12 @@ function getContent(type, id) {
 
         if(newTargetIndex > -1) target = Object.values(target)[newTargetIndex];
     }
+}
+
+function getLocation() {
+    const error = new Error();
+    const stackSplit = error.stack.split("at");
+    
+    const path = stackSplit[stackSplit.length - 1].trim();
+    return path;
 }
