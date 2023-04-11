@@ -17,7 +17,7 @@ export default function parser(content) {
         const regex = {
             firstLine: /^<br>\n/,
             whitespaces: /^(\s+|\t)/gm,
-            innerList: /(\s+|\t)(?=[0-9]+\.\s+.+<br>).+/gm
+            innerList: /(\s+|\t)(?=([0-9]+\.|\*|\+|-)\s+.+<br>).+/gm
         };
 
         let potentialInnerListMatches = [];
@@ -64,10 +64,7 @@ export default function parser(content) {
                     const mergedRealInnerListMatches = [];
 
                     for(let i = 0; i < realInnerListMatches.length; i++) mergedRealInnerListMatches.push(...realInnerListMatches[i]);
-                    
-                    for(let i = 0; i < mergedRealInnerListMatches.length; i++) {
-                        parsedContent = parsedContent.replaceAll(mergedRealInnerListMatches[i], innerMatches[i]);
-                    }
+                    for(let i = 0; i < mergedRealInnerListMatches.length; i++) parsedContent = parsedContent.replaceAll(mergedRealInnerListMatches[i], innerMatches[i]);
 
                     potentialInnerListMatches = [];
                     realInnerListMatches = [];
