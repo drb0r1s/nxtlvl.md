@@ -419,9 +419,23 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
             if(!isNaN(parseInt(tagsMd))) {
                 const lines = innerContent.split("\n");
-
                 let counter = parseInt(tagsMd);
-                for(let i = 0; i < lines.length; i++) if(lines[i]) counter++;
+                
+                if(!specialStatus) {
+                    const requiredSpaces = StartSpaces.count(lines[0]);
+                    for(let i = 0; i < lines.length; i++) if(lines[i] && StartSpaces.count(lines[i]) === requiredSpaces) counter++;
+                }
+                
+                else {
+                    let skip = 0;
+                    const regex = { opened: /\([0-9]+\.<br>/gm, closed: /[0-9]+\.\)<br>/gm };
+                    
+                    for(let i = 0; i < lines.length; i++) {
+                        if(lines[i].match(regex.opened)) skip++;
+                        else if(lines[i].match(regex.closed)) skip--;
+                        else if(lines[i] && !skip) counter++;
+                    }
+                }
 
                 if(parseInt(tagsMd) !== counter - 1) tagsMd = `${tagsMd}-${counter - 1}`;
             }
