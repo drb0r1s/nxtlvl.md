@@ -25,11 +25,8 @@ const logs = {
         EMPTY: {
             SETTINGS: "Settings configuration object is empty.",
             STYLE_ARRAY: "Array of elements is empty.",
-            STYLE_BLOCK: "Block of rules for selector \"{selector}\" is empty."
-        },
-
-        UNNECESSARY: {
-            BLOCKS: "Unnecessary block: {block}.\nIt is unnecessary to nest blocks of the same type."
+            STYLE_BLOCK: "Block of rules for selector \"{selector}\" is empty.",
+            SPECIAL_BLOCK: "Special block: \"({md}, {md})\" is empty. Special blocks won't be converted if they have no content."
         },
 
         UNDEFINED: {
@@ -54,6 +51,7 @@ function log(type, id, props) {
     let validContent = content;
     
     const logProps = propFinder();
+    if(!logProps) return;
 
     if(typeof props === "string" && logProps.length === 1) validContent = validContent.replaceAll(`{${logProps[0]}}`, props);
 
@@ -76,7 +74,15 @@ function log(type, id, props) {
     
     function propFinder() {
         const regex = /(?<={)[a-zA-Z0-9]+(?=})/gm;
-        return validContent.match(regex);
+        if(typeof validContent !== "string") return;
+
+        let props = validContent.match(regex);
+        const samePropsCheck = [];
+
+        for(let i = 0; i < props.length; i++) if(samePropsCheck.indexOf(props[i]) === -1) samePropsCheck.push(props[i]);
+        props = samePropsCheck;
+
+        return props;
     }
 }
 

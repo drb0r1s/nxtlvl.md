@@ -17,7 +17,7 @@ export default function parser(content) {
         const regex = {
             firstLine: /^<br>\n/,
             whitespaces: /^(\s+|\t)/gm,
-            innerList: /(\s+|\t)(?=([0-9]+\.|\*|\+|-)(\s+.+|\s*)<br>).+/gm
+            innerList: /(\s+|\t)(?=([0-9]+\.|\*|\+|-)\s+.+<br>).+/gm
         };
 
         let potentialInnerListMatches = [];
