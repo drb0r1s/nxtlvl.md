@@ -17,7 +17,7 @@ export default function parser(content) {
         const regex = {
             firstLine: /^<br>\n/,
             whitespaces: /^(\s+|\t)/gm,
-            innerList: /(\s+|\t)(?=([0-9]+\.|\*|\+|-)\s+.+<br>).+/gm
+            innerList: /(\s+|\t)(?=([0-9]+\.|\*|\+|-)(\s+.+|\s*)<br>).+/gm
         };
 
         let potentialInnerListMatches = [];
@@ -100,10 +100,7 @@ export default function parser(content) {
             realMatches.forEach(realMatch => {
                 const childrenBlock = [];
                 
-                realMatch.matches.forEach(match => {
-                    if(realMatch.spaces < StartSpaces.count(match)) childrenBlock.push(match)
-                });
-
+                realMatch.matches.forEach(match => { if(realMatch.spaces < StartSpaces.count(match)) childrenBlock.push(match) });
                 if(childrenBlock.length > 0) realInnerListMatches.push(childrenBlock);
             });
         }
