@@ -230,14 +230,24 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     }
 
     function addPairs() {
+        const collapsibleContents = [];
         const listContents = [];
+
         pairs.formatted.forEach(pair => addPair(pair));
 
+        if(symbol.tag === "details") parseCollapsible();
         if(symbol.tag === "ol" || symbol.tag === "ul") parseList();
 
         function addPair(pair) {
             const { realPositions, validTags, innerContent, specialStatus } = parsePair(pair);
 
+            if(symbol.tag === "details") {
+                let exists = false;
+                if(collapsibleContents.indexOf(innerContent) > -1) exists = true;
+
+                if(!exists) collapsibleContents.push(innerContent);
+            }
+            
             if(symbol.tag === "ol" || symbol.tag === "ul") {
                 const tagsMd = specialStatus ? specialStatus: getClassicMd(innerContent);
                 
@@ -287,6 +297,38 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             }
         }
 
+        function parseCollapsible() {
+            collapsibleContents.forEach(collapsibleContent => {
+                const tags = generateTags(symbol, { tag: "summary", md: "<" });
+                
+                const lines = removeCollapsibleMd(collapsibleContent.split("<br>\n"));
+                lines[0] = `${tags.opened}${lines[0]}${tags.closed}`;
+
+                let newCollapsibleContent = "";
+                lines.forEach((line, index) => { newCollapsibleContent += `${line}${!index ? "" : index === lines.length - 1 ? "" : "<br>"}` });
+
+                parsedContent = parsedContent.replaceAll(collapsibleContent, newCollapsibleContent);
+            });
+
+            function removeCollapsibleMd(lines) {
+                const noMdLines = [];
+
+                lines.forEach(line => {
+                    let noMdLine = "";
+                    let block = true;
+
+                    for(let i = 0; i < line.length; i++) {
+                        if(block && (line[i] !== "<" && line[i] !== " ")) block = false;
+                        if(!block) noMdLine += line[i];
+                    }
+
+                    noMdLines.push(noMdLine);
+                });
+
+                return noMdLines;
+            }
+        }
+        
         function parseList() {
             listContents.forEach(liContent => {
                 if(liContent.isSpecial) {
@@ -468,7 +510,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         }
 
         function getValidTags(innerContent, specialStatus) {
-            if(symbol.tag !== "ol" &&  symbol.tag !== "ul") return tags;
+            if(symbol.tag !== "details" && symbol.tag !== "ol" &&  symbol.tag !== "ul") return tags;
 
             let tagsMd = specialStatus ? specialStatus : getClassicMd(innerContent);
             const startValue = !isNaN(parseInt(tagsMd)) ? { start: tagsMd } : {};
@@ -597,6 +639,9 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         let result = [];
         
         switch(symbol.tag) {
+            case "details":
+                result.push("<");
+                break;
             case "ol": 
                 result.push("number");
                 break;

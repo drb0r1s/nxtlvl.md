@@ -1,4 +1,8 @@
 const defaultStyleRules = {
+    "nxtlvl.classic.span.%": {
+        whiteSpace: "break-spaces"
+    },
+    
     "nxtlvl.blockquote.>": {
         backgroundColor: "#f9f9f9",
         borderLeft: "10px solid #cccccc",
@@ -6,8 +10,17 @@ const defaultStyleRules = {
         padding: "5px 10px"
     },
 
-    "nxtlvl.classic.span.%": {
-        whiteSpace: "break-spaces"
+    "nxtlvl.details.<": {
+        backgroundColor: "#f9f9f9",
+        borderLeft: "5px solid #cccccc",
+        listStylePosition: "inside",
+        margin: "5px 10px",
+        padding: "5px 10px"
+    },
+    
+    "nxtlvl.summary.<": {
+        cursor: "pointer",
+        userSelect: "none"
     },
 
     "nxtlvl.multiple-lines.ol": {

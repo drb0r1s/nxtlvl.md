@@ -12,6 +12,7 @@ const logs = {
         UNDEFINED: {
             PARAM: "{param} param is not defined.",
             CONTENT: "Content is not defined.\nTo define the content you can:\n1. Provide the content as the first parameter of the NXTLVL class (new NXTLVL(content)).\n2. Provide the content as the first parameter of the md method (.md(content)).",
+            RULES: "CSS rules param is not defined.",
             STYLE_SELECTOR: "Selector is not defined."
         },
 
@@ -51,7 +52,6 @@ function log(type, id, props) {
     let validContent = content;
     
     const logProps = propFinder();
-    if(!logProps) return;
 
     if(typeof props === "string" && logProps.length === 1) validContent = validContent.replaceAll(`{${logProps[0]}}`, props);
 
@@ -67,7 +67,6 @@ function log(type, id, props) {
 
     const logContent = `NTLVL.md ${type === "error" ? "Error" : "Warning"}: ${validContent}\nAt: ${getLocation()} (${id})`;
     type === "error" ? console.error(logContent) : console.warn(logContent);
-    getLocation();
 
     const logContentHTML = logContent.replaceAll("\n", "<br>");
     return logContentHTML;
@@ -77,6 +76,8 @@ function log(type, id, props) {
         if(typeof validContent !== "string") return;
 
         let props = validContent.match(regex);
+        if(!props) return;
+        
         const samePropsCheck = [];
 
         for(let i = 0; i < props.length; i++) if(samePropsCheck.indexOf(props[i]) === -1) samePropsCheck.push(props[i]);

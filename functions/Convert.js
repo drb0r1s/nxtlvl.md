@@ -1,4 +1,4 @@
-const Convert = { camelToKebab, kebabToCamel };
+const Convert = { camelToKebab, kebabToCamel, reverse };
 
 function camelToKebab(camel) {
     let kebab = "";
@@ -27,6 +27,13 @@ function kebabToCamel(kebab) {
     }
 
     return camel;
+}
+
+function reverse(string) {
+    let reversedString = "";
+    for(let i = string.length - 1; i >= 0; i--) reversedString += string[i];
+    
+    return reversedString;
 }
 
 export default Convert;

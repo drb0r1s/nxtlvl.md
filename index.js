@@ -2,7 +2,6 @@ import Log from "./Log.js";
 import parser from "./grammar/parser.js";
 import Style from "./functions/Style.js";
 import defaultStyleRules from "./defaultStyleRules.js";
-import Convert from "./functions/Convert.js";
 
 export default class NXTLVL {
     constructor(content = "", settings) {
@@ -140,7 +139,7 @@ export default class NXTLVL {
 
         const styleElement = document.createElement("style");
         styleElement.setAttribute("id", "nxtlvl-md-default-style-rules");
-        styleElement.innerText = Style.convert(this.settings.styleRules);
+        styleElement.innerText = Style.convert.toString(this.settings.styleRules);
 
         head.appendChild(styleElement);
     }
@@ -242,42 +241,11 @@ export default class NXTLVL {
         
         Object.values(autoMdElements).forEach(elements => elements.forEach(element => {
             const { nxtlvlStyle } = element.dataset;
-            const rules = convertToObjectRules(nxtlvlStyle);
+            if(!nxtlvlStyle) return injectMd(element, element.innerText);
 
+            const rules = Style.convert.toObject(nxtlvlStyle);
             injectMd(element, element.innerText, rules);
         }));
-
-        function convertToObjectRules(rules) {
-            if(!rules) return;
-
-            try {
-                let objectRules = {};
-                const noBlankRules = rules.replaceAll(/[\s\n]+/gm, "");
-
-                const divideBlocks = noBlankRules.split("}");
-                if(!divideBlocks[divideBlocks.length - 1]) divideBlocks.pop();
-
-                divideBlocks.forEach(block => {
-                    const divideRules = block.split("{");
-                    
-                    const divideProps = divideRules[1].split(";");
-                    if(!divideProps[divideProps.length - 1]) divideProps.pop();
-
-                    let objectProps = {};
-                    
-                    divideProps.forEach(prop => {
-                        const [name, object] = prop.split(":");
-                        objectProps = {...objectProps, [Convert.kebabToCamel(name)]: object};
-                    });
-
-                    objectRules = {...objectRules, [divideRules[0]]: objectProps};
-                });
-
-                return objectRules;
-            }
-
-            catch(e) { Log.error("UNKNOWN.STYLE_SYNTAX") }
-        }
     }
 }
 

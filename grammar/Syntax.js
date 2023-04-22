@@ -24,19 +24,21 @@ const Syntax = {
             { tag: "b", md: "__" },
             { tag: "i", md: "\\*" },
             { tag: "i", md: "_" },
+            // NXTLVL:
             { tag: "span", md: "%" }
         ],
 
         multipleLines: [
             { tag: "blockquote", md: ">" },
-            { tag: "ol", md: "(\\s+)?[0-9]+\.(\\s|(?=\\)?<br>))" },
-            { tag: "ul", md: "(\\s+)?[*+-]" }
+            { tag: "details", md: "<\\s+" },
+            { tag: "ol", md: "(\\s+)?[0-9]+\.(\\s+|(?=\\)?<br>))" },
+            { tag: "ul", md: "(\\s+)?[*+-]\\s+" }
         ],
     },
 
     patterns: {
         oneLine: "((?<=^>(\\s+)?)#{1,6}|^{md})\\s+|(?<=(^>(\\s+)?#{1,6}|^{md})\\s+.+)<br>",
-        multipleLines: "((?<=^<(blockquote|ol|ul).+\">){md}|^{md})(?![\\s]*<br>).+|^\\({md}(\\s+)?<br>|^{md}\\)(\\s+)?<br>",
+        multipleLines: "((?<=^<(blockquote|details|ol|ul).+\">){md}|^{md})(?![\\s]*<br>).+|^\\({md}(\\s+)?<br>|^{md}\\)(\\s+)?<br>",
         upperLine: ".+(?=<br>\\n^{md}+<br>)",
         classic: "(?<!<(b|i)\\sclass=\"nxtlvl\\sclassic\\s(b|i)\\s)({md}(?=.+{md})(?!(\\s+)?{md}))(?!\">)|(?<!<(b|i)\\sclass=\"nxtlvl\\sclassic\\s(b|i)\\s)((?<={md}.+)(?<!{md}(\\s+)?){md})(?!\">)",
         
