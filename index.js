@@ -1,6 +1,6 @@
 import Log from "./Log.js";
 import parser from "./grammar/parser.js";
-import Style from "./functions/Style.js";
+import Style from "./functions/Style/index.js";
 import defaultStyleRules from "./defaultStyleRules.js";
 
 export default class NXTLVL {
@@ -244,6 +244,8 @@ export default class NXTLVL {
             if(!nxtlvlStyle) return injectMd(element, element.innerText);
 
             const rules = Style.convert.toObject(nxtlvlStyle);
+
+            if(!rules) return injectMd(element, element.innerText);
             injectMd(element, element.innerText, rules);
         }));
     }
