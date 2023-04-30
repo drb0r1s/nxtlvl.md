@@ -5,6 +5,7 @@ const logs = {
             ELEMENT: "Invalid element type: {type}. Element must be an HTML Element (DOM) or an array of elements.",
             RULES: "Invalid rules type: {type}. Rules must be an object.",
             STYLE_BLOCK: "Invalid block of rules type: {type}. Block of rules must be an object.",
+            STYLE_PROPERTY_VALUE: "Invalid rules block property value type: {type}. Property value of rules block must be a string.",
             SETTINGS: "Invalid settings configuration type: {type}. Settings configuration param must be an object.",
             INHERIT: "Invalid type of the reserved property \"inherit\": {type}. \"Inherit\" property must be a boolean."
         },
@@ -13,12 +14,14 @@ const logs = {
             PARAM: "{param} param is not defined.",
             CONTENT: "Content is not defined.\nTo define the content you can:\n1. Provide the content as the first parameter of the NXTLVL class (new NXTLVL(content)).\n2. Provide the content as the first parameter of the md method (.md(content)).",
             RULES: "CSS rules param is not defined.",
-            STYLE_SELECTOR: "Selector is not defined."
+            STYLE_SELECTOR: "Selector is not defined.",
+            STYLE_PROPERTY: "Rules block property is not defined."
         },
 
         UNKNOWN: {
             SETTING: "Unkown setting: {setting}. While configuring default settings you should edit only the existing properties.",
-            STYLE_SYNTAX: "Unkown style syntax at data-nxtlvl-style. Syntax is not properly defined."
+            STYLE_SYNTAX: "Unkown style syntax at data-nxtlvl-style. Syntax is not properly defined.",
+            CHARACTER: "Unknown character \"{character}\" at {location}."
         }
     },
 

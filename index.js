@@ -225,8 +225,8 @@ export default class NXTLVL {
                     result = false;
                 }
 
-                else if(typeof param !== "object") {
-                    Log.error("INVALID_TYPE.RULES", typeof param);
+                else if(typeof param !== "object" || Array.isArray(param)) {
+                    Log.error("INVALID_TYPE.RULES", Array.isArray(param) ? "array" : typeof param);
                     result = false;
                 }
 
@@ -237,8 +237,8 @@ export default class NXTLVL {
                     result = false;
                 }
 
-                else if(typeof param !== "object") {
-                    Log.error("INVALID_TYPE.SETTINGS", typeof param);
+                else if(typeof param !== "object" || Array.isArray(param)) {
+                    Log.error("INVALID_TYPE.SETTINGS", Array.isArray(param) ? "array" : typeof param);
                     result = false;
                 }
             

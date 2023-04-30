@@ -88,7 +88,6 @@ export default function toObject(rules) {
             if(!line) return;
 
             const [prop, value] = line.split(":");
-            console.log(value)
             props = {...props, [Convert.kebabToCamel(prop)]: value};
         });
 

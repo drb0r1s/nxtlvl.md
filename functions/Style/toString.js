@@ -11,7 +11,7 @@ export default function toString(rules) {
 
         const block = Object.values(rules)[index];
         
-        if(typeof block !== "object") return Log.error("INVALID_TYPE.STYLE_BLOCK", typeof block);
+        if(typeof block !== "object" || Array.isArray(block)) return Log.error("INVALID_TYPE.STYLE_BLOCK", Array.isArray(block) ? "array" : typeof block);
         if(Object.keys(block).length === 0) return Log.warn("EMPTY.STYLE_BLOCK", selector);
 
         const [parsedBlock, innerBlocks] = parseBlock(selector, block);
