@@ -29,6 +29,8 @@ export default function apply(element, rules) {
             if(!property) return Log.error("UNDEFINED.STYLE_PROPERTY");
             
             const value = Object.values(block)[index];
+
+            if(typeof value === "object" && !Array.isArray(value) && Object.keys(value).length > 0) return apply(element, { [property]: value });
             if(typeof value !== "string") return Log.error("INVALID_TYPE.STYLE_PROPERTY_VALUE", typeof value);
 
             if(!checkCharacters(property, value)) return;
