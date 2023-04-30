@@ -19,10 +19,7 @@ export default function toObject(rules) {
         rulesMap.push(ruleMapTemplate);
     });
 
-    if(rulesMap.length === 0) {
-        Log.error("UNKNOWN.STYLE_SYNTAX");
-        return null;
-    }
+    if(rulesMap.length === 0) return Log.error("UNKNOWN.STYLE_SYNTAX");
 
     const innerOpenedBlocks = [];
 
@@ -91,6 +88,7 @@ export default function toObject(rules) {
             if(!line) return;
 
             const [prop, value] = line.split(":");
+            console.log(value)
             props = {...props, [Convert.kebabToCamel(prop)]: value};
         });
 

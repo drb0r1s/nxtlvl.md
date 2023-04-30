@@ -1,3 +1,4 @@
+import Log from "../../Log.js";
 import Convert from "../Convert.js";
 import parseSelector from "./parseSelector.js";
 

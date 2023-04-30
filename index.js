@@ -26,6 +26,18 @@ export default class NXTLVL {
         return this.#parse();
     }
 
+    render(element, rules) {
+        this.#setDefaultStyleRules();
+
+        if(!this.#check("element", element)) return;
+        if(rules && !this.#check("rules", rules)) return;
+
+        this.content = element.innerText;
+        element.innerHTML = this.#parse();
+
+        if(rules) Style.apply(element, rules);
+    }
+
     injectMd(element, content = "", rules) {
         this.#setDefaultStyleRules();
         

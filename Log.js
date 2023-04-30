@@ -40,11 +40,11 @@ const Log = { error, warn };
 export default Log;
 
 function error(id, props) {
-    return log("error", id, props);
+    log("error", id, props);
 }
 
 function warn(id, props) {
-    return log("warn", id, props)
+    log("warn", id, props)
 }
 
 function log(type, id, props) {

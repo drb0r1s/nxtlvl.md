@@ -1,3 +1,4 @@
+import Log from "../../Log.js";
 import Convert from "../Convert.js";
 import parseSelector from "./parseSelector.js";
 
@@ -9,7 +10,6 @@ export default function apply(element, rules) {
         const block = Object.values(rules)[index];
 
         if(typeof block !== "object") return Log.error("INVALID_TYPE.STYLE_BLOCK", typeof block);
-        if(Object.keys(block).length === 0) return Log.warn("EMPTY.STYLE_BLOCK", selector);
 
         if(Array.isArray(element) || element instanceof NodeList) {
             const array = element instanceof NodeList ? [...element] : element;
