@@ -13,23 +13,27 @@ export default function toString(rules) {
         if(typeof block !== "object") return Log.error("INVALID_TYPE.STYLE_BLOCK", typeof block);
         if(Object.keys(block).length === 0) return Log.warn("EMPTY.STYLE_BLOCK", selector);
 
-        const parsedBlock = parseBlock(block);
+        const [parsedBlock, innerBlocks] = parseBlock(selector, block);
 
         convertedRules += `${parsedSelector} {${parsedBlock}}`;
+        innerBlocks.forEach(innerBlock => { convertedRules += innerBlock });
     });
 
     return convertedRules;
 }
 
-function parseBlock(block) {
+function parseBlock(selector, block) {
     let parsedBlock = "";
+    const innerBlocks = [];
 
     if(Object.keys(block).length === 0) return parsedBlock;
 
     Object.keys(block).forEach((property, index) => {
         const value = Object.values(block)[index];
-        parsedBlock += `${Convert.camelToKebab(property)}: ${value};`;
+        
+        if(typeof value === "object") innerBlocks.push(toString({ [`${selector} ${property}`]: value }));
+        else parsedBlock += `${Convert.camelToKebab(property)}: ${value};`;
     });
 
-    return parsedBlock;
+    return [parsedBlock, innerBlocks];
 }

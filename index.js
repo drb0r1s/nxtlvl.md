@@ -133,15 +133,22 @@ export default class NXTLVL {
 
     #setDefaultStyleRules() {
         const existence = document.querySelector("style[id='nxtlvl-md-default-style-rules']") !== null;
-        if(existence) return;
+        const newStyleRules = Style.convert.toString(this.settings.styleRules);
 
-        const head = document.querySelector("head");
+        if(existence) {
+            const styleElement = document.querySelector("style[id='nxtlvl-md-default-style-rules']");    
+            if(styleElement.innerText !== newStyleRules) styleElement.innerText = newStyleRules;
+        }
 
-        const styleElement = document.createElement("style");
-        styleElement.setAttribute("id", "nxtlvl-md-default-style-rules");
-        styleElement.innerText = Style.convert.toString(this.settings.styleRules);
+        else {
+            const head = document.querySelector("head");
 
-        head.appendChild(styleElement);
+            const styleElement = document.createElement("style");
+            styleElement.setAttribute("id", "nxtlvl-md-default-style-rules");
+            styleElement.innerText = newStyleRules;
+
+            head.appendChild(styleElement);
+        }
     }
 
     #check(type, param) {

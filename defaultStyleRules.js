@@ -7,7 +7,7 @@ const defaultStyleRules = {
         backgroundColor: "#f9f9f9",
         borderLeft: "10px solid #cccccc",
         margin: "5px 10px",
-        padding: "5px 10px"
+        padding: "5px 10px",
     },
 
     "nxtlvl.details.<": {
