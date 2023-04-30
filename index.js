@@ -35,7 +35,7 @@ export default class NXTLVL {
         this.content = element.innerText;
         element.innerHTML = this.#parse();
 
-        if(rules) Style.apply(element, rules);
+        this.#scanStyles(element, rules);
     }
 
     injectMd(element, content = "", rules) {
@@ -46,8 +46,7 @@ export default class NXTLVL {
         if(rules && !this.#check("rules", rules)) return;
         
         element.innerHTML = this.#parse();
-
-        if(rules) Style.apply(element, rules);
+        this.#scanStyles(element, rules);
     }
 
     style(element, rules) {
@@ -160,6 +159,21 @@ export default class NXTLVL {
             styleElement.innerText = newStyleRules;
 
             head.appendChild(styleElement);
+        }
+    }
+
+    #scanStyles(element, rules) {
+        if(rules) Style.apply(element, rules);
+        
+        else {
+            const dataset = {...element.dataset};
+            if(Object.keys(dataset).length === 0) return;
+
+            const { nxtlvlStyle } = dataset;
+            if(!nxtlvlStyle) return;
+
+            const datasetRules = Style.convert.toObject(nxtlvlStyle);
+            Style.apply(element, datasetRules);
         }
     }
 
