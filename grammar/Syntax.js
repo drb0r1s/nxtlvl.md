@@ -30,10 +30,10 @@ const Syntax = {
 
         multipleLines: [
             { tag: "blockquote", md: ">" },
-            { tag: "details", md: "<\\s+" },
+            { tag: "details", md: "((?<=\\()<(?=\\s*<br>)|<(?=\\)\\s*<br>)|<(?=\\s+))" },
             { tag: "ol", md: "(\\s+)?[0-9]+\.(\\s+|(?=\\)?<br>))" },
             { tag: "ul", md: "(\\s+)?[*+-]\\s+" }
-        ],
+        ]
     },
 
     patterns: {
