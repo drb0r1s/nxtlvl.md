@@ -120,7 +120,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                     lines.shift();
 
                     const fix = [
-                        "\\((>|(\\s+)?[0-9]+\\.(\\s|(?=\\)?<br>))|(\\s+)?[*+-])(\\s+)?<br>(?=<(blockquote|ol|ul).+\">)?|(?<=(<\\/(blockquote|ol|ul)>|^))(>|(\\s+)?[0-9]+\\.(\\s|(?=\\)?<br>))|(\\s+)?[*+-])\\)(\\s+)?<br>",
+                        "\\((>|\\s*[0-9]+\\.(\\s|(?=\\)?<br>))|\\s*[*+-])\\s*<br>(?=<(blockquote|ol|ul).+\">)?|(?<=(<\\/(blockquote|ol|ul)>|^))(>|\\s*[0-9]+\\.(\\s|(?=\\)?<br>))|\\s*[*+-])\\)\\s*<br>",
                         "<br>"
                     ];
 
@@ -318,7 +318,13 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                     let block = true;
 
                     for(let i = 0; i < line.length; i++) {
-                        if(block && (line[i] !== "<" && line[i] !== " ")) block = false;
+                        const removableMd = index => (line[index] !== "<" && line[index] !== " ");
+
+                        if(
+                            (block && removableMd(i)) ||
+                            (block && (line[i] === "<" && removableMd(i + 1)))
+                        ) block = false;
+                        
                         if(!block) noMdLine += line[i];
                     }
 
@@ -657,8 +663,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     function removeMd() {
         const patterns = {
             fakeBlockquotes: "((?<=<blockquote.+\">)>|^>)(?=[\\s>]*<br>)",
-            classicMd: "((?<=<blockquote.+\">)>|^>)(\\s+)?(?!<br>)",
-            nxtlvlMd: `\\(${symbol.md}(\\s+)?<br>(?=<${symbol.tag}.+">)|(?<=<\\/${symbol.tag}>)${symbol.md}\\)(\\s+)?<br>`
+            classicMd: "((?<=<blockquote.+\">)>|^>)\\s*(?!<br>)",
+            nxtlvlMd: `\\(${symbol.md}\\s*<br>(?=<${symbol.tag}.+">)|(?<=<\\/${symbol.tag}>)${symbol.md}\\)\\s*<br>`
         };
     
         const remove = {

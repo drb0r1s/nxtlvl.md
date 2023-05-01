@@ -10,7 +10,7 @@ export default function oneLine({ content, symbol, matches, tags }) {
         addingDifference += tag.length;
     });
 
-    const pattern = `(?<=(>(\\s+)?${tags.opened}|^${tags.opened}))${symbol.md}+(\\s+)?`;
+    const pattern = `(?<=((>\\s*|<\\s+)${tags.opened}|^${tags.opened}))${symbol.md}+\\s*`;
     const removeMd = new RegExp(pattern, "gm");
 
     parsedContent = parsedContent.replace(removeMd, "");

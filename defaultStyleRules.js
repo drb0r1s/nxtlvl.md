@@ -15,12 +15,14 @@ const defaultStyleRules = {
         borderLeft: "5px solid #cccccc",
         listStylePosition: "inside",
         margin: "5px 10px",
-        padding: "5px 10px"
-    },
-    
-    "nxtlvl.summary.<": {
-        cursor: "pointer",
-        userSelect: "none"
+        padding: "5px 10px",
+
+        "nxtlvl.summary.<": {
+            cursor: "pointer",
+            userSelect: "none",
+
+            "nxtlvl.h1": { display: "inline-block" }
+        },
     },
 
     "nxtlvl.multiple-lines.ol": {

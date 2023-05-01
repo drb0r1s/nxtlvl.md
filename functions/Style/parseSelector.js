@@ -14,7 +14,12 @@ export default function parseSelector(selector) {
         else parsedMultipleSelectors.push(multipleSelector);
     });
 
-    if(parsedMultipleSelectors.legth > 0) parsedSelector = parsedMultipleSelectors.join(" ");
+    if(parsedMultipleSelectors.length > 0) {
+        parsedSelector = "";
+        parsedMultipleSelectors.forEach((parsedMultipleSelector, index) => { parsedSelector += !index ? parsedMultipleSelector : " " + parsedMultipleSelector });
+    }
+
+    console.log(parsedMultipleSelectors, parsedSelector)
 
     const specialSymbols = /!|@|#|\$|%|\^|&|\*|\(|\)|_|\+|\/|\\|\<|\>|\?|,|(?<=\.)\.(?=\.|$)|;|'|"|\||:|-/gm;
     const matches = [...parsedSelector.matchAll(specialSymbols)];
