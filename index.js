@@ -32,7 +32,7 @@ export default class NXTLVL {
         if(!this.#check("element", element)) return;
         if(rules && !this.#check("rules", rules)) return;
 
-        this.content = element.innerText;
+        this.content = element.textContent;
         element.innerHTML = this.#parse();
 
         this.#scanStyles(element, rules);

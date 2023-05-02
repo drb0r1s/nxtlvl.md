@@ -2,17 +2,25 @@ export default function upperLine({ content, symbol, matches, tags }) {
     let parsedContent = content;
     let addingDifference = 0;
 
-    console.log(matches)
-
     matches.forEach(match => {
-        const tag = `${tags.opened}${match.md}${tags.closed}{delete}`;
-        const realPosition = match.position + addingDifference;
+        const realPositions = { start: match.position + addingDifference, end: match.position + match.md.length + addingDifference };
+        const removeBr = match.md.substring(match.md.length - 4) === "<br>" ? 4 : 0;
 
-        parsedContent = parsedContent.substring(0, realPosition) + tag + parsedContent.substring(realPosition);
-        addingDifference += tag.length;
+        parsedContent = parsedContent.substring(0, realPositions.start) + tags.opened + parsedContent.substring(realPositions.start, realPositions.end - removeBr) + tags.closed + parsedContent.substring(realPositions.end);
+        addingDifference += tags.opened.length + tags.closed.length - removeBr;
+
+        removeMd(realPositions.end + addingDifference);
     });
 
-    const matchesPattern = "{delete}.+(?=<br>)";
+    function removeMd(realPositionEnd) {
+        const cutContent = parsedContent.substring(realPositionEnd);
+        const mdEnd = realPositionEnd + cutContent.search("<br>") + 4;
+
+        parsedContent = parsedContent.substring(0, realPositionEnd) + parsedContent.substring(mdEnd);
+        addingDifference -= mdEnd;
+    }
+
+    /*const matchesPattern = "{delete}.+(?=<br>)";
     const removeMatches = new RegExp(matchesPattern, "gm");
 
     parsedContent = parsedContent.replace(removeMatches, "");
@@ -20,7 +28,7 @@ export default function upperLine({ content, symbol, matches, tags }) {
     const pattern = `(?<=.+<br>\\n)^${symbol.md}+<br>`;
     const removeMd = new RegExp(pattern, "gm");
 
-    parsedContent = parsedContent.replace(removeMd, "");
+    parsedContent = parsedContent.replace(removeMd, "");*/
 
     return parsedContent;
 }
