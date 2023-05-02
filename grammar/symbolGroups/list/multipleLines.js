@@ -302,7 +302,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 const tags = generateTags(symbol, { tag: "summary", md: "<" });
                 
                 const lines = removeCollapsibleMd(collapsibleContent.split("\n"));
-                console.log(lines)
                 lines[0] = `${tags.opened}${lines[0]}${tags.closed}`;
 
                 let newCollapsibleContent = "";

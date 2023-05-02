@@ -2,6 +2,8 @@ export default function upperLine({ content, symbol, matches, tags }) {
     let parsedContent = content;
     let addingDifference = 0;
 
+    console.log(matches)
+
     matches.forEach(match => {
         const tag = `${tags.opened}${match.md}${tags.closed}{delete}`;
         const realPosition = match.position + addingDifference;
