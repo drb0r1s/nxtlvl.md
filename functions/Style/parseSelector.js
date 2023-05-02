@@ -19,8 +19,6 @@ export default function parseSelector(selector) {
         parsedMultipleSelectors.forEach((parsedMultipleSelector, index) => { parsedSelector += !index ? parsedMultipleSelector : " " + parsedMultipleSelector });
     }
 
-    console.log(parsedMultipleSelectors, parsedSelector)
-
     const specialSymbols = /!|@|#|\$|%|\^|&|\*|\(|\)|_|\+|\/|\\|\<|\>|\?|,|(?<=\.)\.(?=\.|$)|;|'|"|\||:|-/gm;
     const matches = [...parsedSelector.matchAll(specialSymbols)];
 

@@ -301,11 +301,12 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             collapsibleContents.forEach(collapsibleContent => {
                 const tags = generateTags(symbol, { tag: "summary", md: "<" });
                 
-                const lines = removeCollapsibleMd(collapsibleContent.split("<br>\n"));
+                const lines = removeCollapsibleMd(collapsibleContent.split("\n"));
+                console.log(lines)
                 lines[0] = `${tags.opened}${lines[0]}${tags.closed}`;
 
                 let newCollapsibleContent = "";
-                lines.forEach((line, index) => { newCollapsibleContent += `${line}${!index ? "" : index === lines.length - 1 ? "" : "<br>"}` });
+                lines.forEach(line => { newCollapsibleContent += line });
 
                 parsedContent = parsedContent.replaceAll(collapsibleContent, newCollapsibleContent);
             });

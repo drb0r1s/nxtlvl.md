@@ -39,7 +39,7 @@ const Syntax = {
     },
 
     patterns: {
-        oneLine: "((?<=^(>\\s*|<\\s+))#{1,6}|^{md})\\s+|(?<=(^(>\\s*|<\\s+)#{1,6}|^{md})\\s+.+)<br>",
+        oneLine: "((?<=^(>\\s*|<\\s+)){md}|^{md})(?!\\s*<br>)\\s+.+|((?<=^(>\\s*|<\\s+)){md}|^{md})(?!\\s*<br>)<br>",
         multipleLines: "((?<=^<(blockquote|details|ol|ul).+\">){md}|^{md})(?![\\s]*<br>).+|^\\({md}\\s*<br>|^{md}\\)\\s*<br>",
         upperLine: ".+(?=<br>\\n^{md}+<br>)",
         classic: "(?<!<(b|i)\\sclass=\"nxtlvl\\sclassic\\s(b|i)\\s)({md}(?=.+{md})(?!\\s*{md}))(?!\">)|(?<!<(b|i)\\sclass=\"nxtlvl\\sclassic\\s(b|i)\\s)((?<={md}.+)(?<!{md}\\s*){md})(?!\">)",
