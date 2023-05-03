@@ -20,15 +20,5 @@ export default function upperLine({ content, symbol, matches, tags }) {
         addingDifference -= mdEnd;
     }
 
-    /*const matchesPattern = "{delete}.+(?=<br>)";
-    const removeMatches = new RegExp(matchesPattern, "gm");
-
-    parsedContent = parsedContent.replace(removeMatches, "");
-
-    const pattern = `(?<=.+<br>\\n)^${symbol.md}+<br>`;
-    const removeMd = new RegExp(pattern, "gm");
-
-    parsedContent = parsedContent.replace(removeMd, "");*/
-
     return parsedContent;
 }

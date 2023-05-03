@@ -1,7 +1,21 @@
 const defaultStyleRules = {
-    "nxtlvl.classic.span.%": {
-        whiteSpace: "break-spaces"
+    "nxtlvl.h1": {
+        borderBottom: "1px solid #cccccc",
+        marginBottom: "30px",
+        paddingBottom: "10px"
     },
+
+    "nxtlvl.h2": {
+        borderBottom: "1px solid #cccccc",
+        marginBottom: "20px",
+        paddingBottom: "5px"
+    },
+
+    "nxtlvl.h3": { marginBottom: "15px" },
+    "nxtlvl.h4": { marginBottom: "10px" },
+    "nxtlvl.h5": { marginBottom: "5px" },
+    
+    "nxtlvl.classic.span.%": { whiteSpace: "break-spaces" },
     
     "nxtlvl.blockquote.>": {
         backgroundColor: "#f9f9f9",
@@ -21,7 +35,13 @@ const defaultStyleRules = {
             cursor: "pointer",
             userSelect: "none",
 
-            "nxtlvl.h1": { display: "inline-block" }
+            "nxtlvl.h1, nxtlvl.h2, nxtlvl.h3, nxtlvl.h4, nxtlvl.h5, nxtlvl.h6": { display: "inline-block" },
+            
+            "nxtlvl.h1, nxtlvl.h2": {
+                borderBottom: "none",
+                marginBottom: "0",
+                paddingBottom: "0"
+            }
         },
     },
 

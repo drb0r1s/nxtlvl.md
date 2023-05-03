@@ -32,7 +32,11 @@ function parseBlock(selector, block) {
     Object.keys(block).forEach((property, index) => {
         const value = Object.values(block)[index];
         
-        if(typeof value === "object") innerBlocks.push(toString({ [`${selector} ${property}`]: value }));
+        if(typeof value === "object") {
+            const multipleSelectors = property.split(", ");
+            multipleSelectors.forEach(multipleSelector => innerBlocks.push(toString({ [`${selector} ${multipleSelector}`]: value })));
+        }
+        
         else parsedBlock += `${Convert.camelToKebab(property)}: ${value};`;
     });
 
