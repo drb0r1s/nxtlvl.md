@@ -16,7 +16,7 @@ export default function toString(rules) {
 
         const [parsedBlock, innerBlocks] = parseBlock(selector, block);
 
-        convertedRules += `${parsedSelector} {${parsedBlock}}`;
+        parsedSelector.forEach(s => convertedRules += `${s} {${parsedBlock}}`);
         innerBlocks.forEach(innerBlock => { convertedRules += innerBlock });
     });
 

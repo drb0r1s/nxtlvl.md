@@ -1,35 +1,49 @@
 export default function parseSelector(selector) {
-    let parsedSelector = selector;
+    const parsedSelector = [];
+    
+    if(selector.length === 0) return parsedSelector;
 
-    if(parsedSelector.length === 0) return parsedSelector;
-    if(parsedSelector[0] !== "." || (parsedSelector[0] === "." && parsedSelector.length === 1)) parsedSelector = "." + parsedSelector;
+    const multipleSelectors = selector.split(",");
 
-    const multipleSelectors = parsedSelector.split(" ");
-    const parsedMultipleSelectors = [];
-
-    if(multipleSelectors.length > 1) multipleSelectors.forEach(multipleSelector => {
-        if(!multipleSelector) return;
-
-        if(multipleSelector[0] !== "." || (multipleSelector[0] === "." && multipleSelector.length === 1)) parsedMultipleSelectors.push("." + multipleSelector);
-        else parsedMultipleSelectors.push(multipleSelector);
+    multipleSelectors.forEach(multipleSelector => {
+        const convertedSelector = convertSelector(multipleSelector[0] === " " ? multipleSelector.substring(1) : multipleSelector);
+        if(convertedSelector) parsedSelector.push(convertedSelector);
     });
 
-    if(parsedMultipleSelectors.length > 0) {
-        parsedSelector = "";
-        parsedMultipleSelectors.forEach((parsedMultipleSelector, index) => { parsedSelector += !index ? parsedMultipleSelector : " " + parsedMultipleSelector });
+    return parsedSelector;
+}
+
+function convertSelector(selector) {
+    let convertedSelector = selector;
+    
+    if(convertedSelector[0] !== "." || (convertedSelector[0] === "." && convertedSelector.length === 1)) convertedSelector = "." + convertedSelector;
+
+    const innerSelectors = convertedSelector.split(" ");
+    const parsedinnerSelectors = [];
+
+    if(innerSelectors.length > 1) innerSelectors.forEach(innerSelector => {
+        if(!innerSelector) return;
+
+        if(innerSelector[0] !== "." || (innerSelector[0] === "." && innerSelector.length === 1)) parsedinnerSelectors.push("." + innerSelector);
+        else parsedinnerSelectors.push(innerSelector);
+    });
+
+    if(parsedinnerSelectors.length > 0) {
+        convertedSelector = "";
+        parsedinnerSelectors.forEach((parsedinnerSelector, index) => { convertedSelector += !index ? parsedinnerSelector : " " + parsedinnerSelector });
     }
 
     const specialSymbols = /!|@|#|\$|%|\^|&|\*|\(|\)|_|\+|\/|\\|\<|\>|\?|,|(?<=\.)\.(?=\.|$)|;|'|"|\||:|-/gm;
-    const matches = [...parsedSelector.matchAll(specialSymbols)];
+    const matches = [...convertedSelector.matchAll(specialSymbols)];
 
     let addingDifference = 0;
 
     matches.forEach(match => {
         const realPosition = match.index + addingDifference;
-        parsedSelector = parsedSelector.substring(0, realPosition) + "\\" + parsedSelector.substring(realPosition);
+        convertedSelector = convertedSelector.substring(0, realPosition) + "\\" + convertedSelector.substring(realPosition);
 
         addingDifference += "\\".length;
     });
 
-    return parsedSelector;
+    return convertedSelector;
 }
