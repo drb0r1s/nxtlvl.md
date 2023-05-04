@@ -4,7 +4,6 @@ import parseSelector from "./parseSelector.js";
 
 export default function apply(element, rules) {
     Object.keys(rules).forEach((selector, index) => {
-        console.log(selector)
         const parsedSelector = parseSelector(selector);
         if(parsedSelector.length === 0) return Log.error("UNDEFINED.STYLE_SELECTOR");
 

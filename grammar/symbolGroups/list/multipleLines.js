@@ -7,6 +7,8 @@ import StartSpaces from "../../../functions/StartSpaces.js";
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
 
+    console.log(matches)
+
     const pairs = { classic: [], special: [], formatted: [] };
     let specialMd = [];
     
@@ -155,13 +157,19 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         }
 
         function classicSearch(match, nextMatch) {
+            const contentStatus = checkClassicSearchContent(match.md);
             const eol = match.position + match.md.length;
 
             if(symbol.tag === "blockquote" && !checkBlockquotes(match.position, eol)) return;
             
             if(Object.keys(pairTemplate).length === 0) pairTemplate = { start: match.position, end: eol };
 
-            if(!nextMatch || (eol + 1 !== nextMatch.position)) {
+            if(!contentStatus) console.log(match.md)
+
+            if(
+                (!nextMatch || (eol + 1 !== nextMatch.position)) ||
+                (!contentStatus && (pairTemplate.start === match.position))
+            ) {
                 pairs.classic.push(pairTemplate);
                 if(inner.pairTemplates.length > 0) resetInnerPairTemplate();
 
@@ -181,6 +189,14 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             for(let i = start; i < end - 4; i++) if(parsedContent[i] !== " " && parsedContent[i] !== ">") status = true;
 
             return status;
+        }
+
+        function checkClassicSearchContent(content) {
+            let hasContent = false;
+            const brLength = content.substring(content.length - 4) === "<br>" ? 4 : 0;
+
+            for(let i = 1; i < content.length - brLength; i++) { if(content[i] !== " ") hasContent = true }
+            return hasContent;
         }
 
         function formatInnerPairTemplate(nextMatch, addNew) {            
@@ -260,6 +276,16 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 if(!exists) listContents.push({ content: innerContent, md: tagsMd, isSpecial: specialStatus });
             }
 
+            /*const brTags = [...innerContent.matchAll("<br>")];
+            if(brTags[brTags.length - 1] === undefined) console.log(innerContent)
+            const lastBr = brTags[brTags.length - 1].index;
+
+            console.log(brTags)
+
+            const noBrInnerContent = innerContent.substring(0, lastBr) + innerContent.substring(lastBr + 4);*/
+            
+            //console.log(innerContent, "\n==========\n", noBrInnerContent)
+
             parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + innerContent + parsedContent.substring(realPositions.end);
             addingDifference += validTags.opened.length;
 
@@ -328,7 +354,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                         if(!block) noMdLine += line[i];
                     }
 
-                    noMdLines.push(noMdLine);
+                    if(noMdLine) noMdLines.push(noMdLine);
                 });
 
                 return noMdLines;
@@ -472,7 +498,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                             const tagsMd = symbol.tag === "ol" ? lineCounter : liContent.md;
                             const liTags = generateTags(symbol, { tag: "li", md: tagsMd });
         
-                            parsedLiContent += `${liTags.opened}${removeListMd(StartSpaces.cut(line), liContent.isSpecial)}${liTags.closed}`;
+                            parsedLiContent += `${liTags.opened}${removeListMd(StartSpaces.cut(line.substring(0, line.length - 4)), liContent.isSpecial)}${liTags.closed}`;
                             lineCounter++;
                         });
 
@@ -663,7 +689,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     function removeMd() {
         const patterns = {
             fakeBlockquotes: "((?<=<blockquote.+\">)>|^>)(?=[\\s>]*<br>)",
-            classicMd: "((?<=<blockquote.+\">)>|^>)\\s*(?!<br>)",
+            classicMd: "((?<=<blockquote.+\">)>|^>)\\s*(?!(<br>|$))",
             nxtlvlMd: `\\(${symbol.md}\\s*<br>(?=<${symbol.tag}.+">)|(?<=<\\/${symbol.tag}>)${symbol.md}\\)\\s*<br>`
         };
     
@@ -676,6 +702,25 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         parsedContent = parsedContent.replace(remove.fakeBlockquotes, "&gt;");
         parsedContent = parsedContent.replace(remove.classicMd, "");
         parsedContent = parsedContent.replace(remove.nxtlvlMd, "");
+
+        removeLastBr();
+        
+        function removeLastBr() {
+            const targetTags = ["blockquote", "details", "summary"];
+            
+            targetTags.forEach(targetTag => {
+                const lastBrTags = [...parsedContent.matchAll(`<br></${targetTag}>`)];
+                let removingDifference = 0;
+
+                lastBrTags.forEach(lastBrTag => {
+                    const realPosition = lastBrTag.index - removingDifference;
+                    const brLength = 4;
+
+                    parsedContent = parsedContent.substring(0, realPosition) + parsedContent.substring(realPosition + brLength);
+                    removingDifference += brLength;
+                });
+            });
+        }
     }
 
     return parsedContent;
