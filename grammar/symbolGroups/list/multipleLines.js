@@ -7,8 +7,6 @@ import StartSpaces from "../../../functions/StartSpaces.js";
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
 
-    console.log(matches)
-
     const pairs = { classic: [], special: [], formatted: [] };
     let specialMd = [];
     
@@ -115,6 +113,66 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             checkEmptyPairs();
             
             function checkEmptyPairs() {
+                if(symbol.tag !== "blockquote" && symbol.tag !== "details") {
+                    const notEmptyPairPattern = symbol.md + "(?!\\s*<br>)";
+                    const notEmptyPairRegex = new RegExp(notEmptyPairPattern, "g");
+                    
+                    const replacePairsClassic = [];
+                    
+                    pairs.classic.forEach(pair => {
+                        const pairContent = parsedContent.substring(pair.start, pair.end);
+
+                        const lines = pairContent.split("\n");
+                        let emptyStatus = false;
+
+                        lines.forEach(line => { if(!line.match(notEmptyPairRegex)) emptyStatus = true });
+
+                        if(!emptyStatus) return;
+                        
+                        let newPair = "";
+                        lines.forEach((line, index) => { if(line.match(notEmptyPairRegex)) newPair += line + (index === lines.length - 1 ? "" : "\n") });
+
+                        const newPairMatches = [...parsedContent.matchAll(newPair)];
+                        let closestPairMatch = newPairMatches[0];
+
+                        if(newPairMatches.length > 1) for(let i = 1; i < newPairMatches.length; i++) {
+                            const difference = Math.abs(pair.start - newPairMatches[i].index);
+                            const currentDifference = Math.abs(pair.start - closestPairMatch.index);
+
+                            if(difference < currentDifference) closestPairMatch = newPairMatches[i];
+                            else if((pair.start > closestPairMatch.index) && (pair.start < newPairMatches[i].index)) closestPairMatch = newPairMatches[i];
+                        }
+
+                        console.log(newPair)
+                        replacePairsClassic.push({ pair: { start: closestPairMatch.index, end: closestPairMatch.index + closestPairMatch[0].length }, replace: pair });
+                    });
+
+                    //newPairsClassic.forEach(p => console.log(parsedContent.substring(p.start, p.end)))
+
+                    if(replacePairsClassic.length > 0) {
+                        const newPairsClassic = [];
+
+                        pairs.classic.forEach(pair => {
+                            let status = true;
+                            replacePairsClassic.forEach(replacePair => { if(pair.start === replacePair.replace.start && pair.end === replacePair.replace.end) status = false });
+
+                            if(status) newPairsClassic.push(pair);
+                        });
+
+                        replacePairsClassic.forEach(replacePair => newPairsClassic.push(replacePair.pair));
+
+                        let swap;
+
+                        for(let i = 0; i < newPairsClassic.length; i++) for(let j = i + 1; j < newPairsClassic.length; j++) if(newPairsClassic[i].start > newPairsClassic[j].start) {
+                            swap = newPairsClassic[i];
+                            newPairsClassic[i] = newPairsClassic[j];
+                            newPairsClassic[j] = swap;
+                        }
+
+                        pairs.classic = newPairsClassic;
+                    }
+                }
+                
                 pairs.special.forEach(pair => {
                     const pairContent = parsedContent.substring(pair.start, pair.end);
                     
@@ -157,19 +215,14 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         }
 
         function classicSearch(match, nextMatch) {
-            const contentStatus = checkClassicSearchContent(match.md);
             const eol = match.position + match.md.length;
-
-            if(symbol.tag === "blockquote" && !checkBlockquotes(match.position, eol)) return;
+            
+            const allowedEmptyContent = checkAllowedEmptyContent(match.md);
             
             if(Object.keys(pairTemplate).length === 0) pairTemplate = { start: match.position, end: eol };
+            if(allowedEmptyContent && (pairTemplate.start === match.position)) return pairTemplate = {};
 
-            if(!contentStatus) console.log(match.md)
-
-            if(
-                (!nextMatch || (eol + 1 !== nextMatch.position)) ||
-                (!contentStatus && (pairTemplate.start === match.position))
-            ) {
+            if(!nextMatch || (eol + 1 !== nextMatch.position)) {
                 pairs.classic.push(pairTemplate);
                 if(inner.pairTemplates.length > 0) resetInnerPairTemplate();
 
@@ -179,24 +232,20 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             else if(eol + 1 === nextMatch.position) {
                 if(parsedContent[nextMatch.position] === " ") formatInnerPairTemplate(nextMatch);
                 else if(inner.pairTemplates.length > 0) resetInnerPairTemplate();
-                
+
                 pairTemplate = {...pairTemplate, end: nextMatch.position + nextMatch.md.length};
             }
         }
 
-        function checkBlockquotes(start, end) {
-            let status = false;
-            for(let i = start; i < end - 4; i++) if(parsedContent[i] !== " " && parsedContent[i] !== ">") status = true;
+        function checkAllowedEmptyContent(content) {
+            let status = true;
 
-            return status;
-        }
-
-        function checkClassicSearchContent(content) {
-            let hasContent = false;
+            const md = symbol.tag === "blockquote" ? ">" : "<";
             const brLength = content.substring(content.length - 4) === "<br>" ? 4 : 0;
 
-            for(let i = 1; i < content.length - brLength; i++) { if(content[i] !== " ") hasContent = true }
-            return hasContent;
+            for(let i = 0; i < content.length - brLength; i++) if(content[i] !== " " && content[i] !== md) status = false;
+            
+            return status;
         }
 
         function formatInnerPairTemplate(nextMatch, addNew) {            
@@ -276,18 +325,11 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 if(!exists) listContents.push({ content: innerContent, md: tagsMd, isSpecial: specialStatus });
             }
 
-            /*const brTags = [...innerContent.matchAll("<br>")];
-            if(brTags[brTags.length - 1] === undefined) console.log(innerContent)
-            const lastBr = brTags[brTags.length - 1].index;
+            const parsedInnerContent = removeAllowedEmptyClassicMd(innerContent);
+            const innerContentDifference = Math.abs(innerContent.length - parsedInnerContent.length);
 
-            console.log(brTags)
-
-            const noBrInnerContent = innerContent.substring(0, lastBr) + innerContent.substring(lastBr + 4);*/
-            
-            //console.log(innerContent, "\n==========\n", noBrInnerContent)
-
-            parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + innerContent + parsedContent.substring(realPositions.end);
-            addingDifference += validTags.opened.length;
+            parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + parsedInnerContent + parsedContent.substring(realPositions.end);
+            addingDifference += validTags.opened.length - innerContentDifference;
 
             if(pair.inner) pair.inner.forEach(innerPair => addPair(innerPair));
 
@@ -588,6 +630,24 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             }
 
             return number;
+        }
+
+        function removeAllowedEmptyClassicMd(innerContent) {
+            if(symbol.tag !== "blockquote" && symbol.tag !== "details") return innerContent;
+            
+            let newInnerContent = "";
+            
+            const lines = innerContent.split("\n");
+            const emptyLine = /^[>\s]+$/g
+
+            lines.forEach((line, index) => {
+                const noBrLine = line.substring(line.length - 4) === "<br>" ? line.substring(0, line.length - 4) : line;
+                
+                if(noBrLine.match(emptyLine)) newInnerContent += `<br>${index === lines.length - 1 ? "" : "\n"}`;
+                else newInnerContent += `${line}${index === lines.length - 1 ? "" : "\n"}`;
+            });
+
+            return newInnerContent;
         }
     }
 
