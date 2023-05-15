@@ -2,6 +2,7 @@ import Log from "../../../Log.js";
 import Syntax from "../../Syntax.js";
 import generateTags from "../../../functions/generateTags.js";
 import escapeRegex from "../../../functions/escapeRegex.js";
+import findClosestMath from "../../../functions/findClosestMatch.js";
 import StartSpaces from "../../../functions/StartSpaces.js";
 
 export default function multipleLines({ content, symbol, matches, tags }) {
@@ -60,11 +61,14 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     function getPairs(matches) {
         let pairTemplate = {};
         const inner = { pairTemplates: [], starts: [] };
+        const unparsedClassicPairs = [];
 
         matches.forEach((match, index) => {
             if(specialMdSearch(match)) return;
             classicSearch(match, matches[index + 1]);
         });
+
+        checkUnparsedClassicPairs();
 
         let swap;
         
@@ -132,22 +136,10 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                         let newPair = "";
                         lines.forEach((line, index) => { if(line.match(notEmptyPairRegex)) newPair += line + (index === lines.length - 1 ? "" : "\n") });
 
-                        const newPairMatches = [...parsedContent.matchAll(newPair)];
-                        let closestPairMatch = newPairMatches[0];
-
-                        if(newPairMatches.length > 1) for(let i = 1; i < newPairMatches.length; i++) {
-                            const difference = Math.abs(pair.start - newPairMatches[i].index);
-                            const currentDifference = Math.abs(pair.start - closestPairMatch.index);
-
-                            if(difference < currentDifference) closestPairMatch = newPairMatches[i];
-                            else if((pair.start > closestPairMatch.index) && (pair.start < newPairMatches[i].index)) closestPairMatch = newPairMatches[i];
-                        }
-
-                        console.log(newPair)
+                        const closestPairMatch = findClosestMath(parsedContent, newPair);
+                        if(closestPairMatch === undefined) console.log(newPair)
                         replacePairsClassic.push({ pair: { start: closestPairMatch.index, end: closestPairMatch.index + closestPairMatch[0].length }, replace: pair });
                     });
-
-                    //newPairsClassic.forEach(p => console.log(parsedContent.substring(p.start, p.end)))
 
                     if(replacePairsClassic.length > 0) {
                         const newPairsClassic = [];
@@ -216,14 +208,13 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
         function classicSearch(match, nextMatch) {
             const eol = match.position + match.md.length;
-            
             const allowedEmptyContent = checkAllowedEmptyContent(match.md);
             
             if(Object.keys(pairTemplate).length === 0) pairTemplate = { start: match.position, end: eol };
             if(allowedEmptyContent && (pairTemplate.start === match.position)) return pairTemplate = {};
 
             if(!nextMatch || (eol + 1 !== nextMatch.position)) {
-                pairs.classic.push(pairTemplate);
+                unparsedClassicPairs.push(pairTemplate)
                 if(inner.pairTemplates.length > 0) resetInnerPairTemplate();
 
                 pairTemplate = {};
@@ -236,8 +227,10 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 pairTemplate = {...pairTemplate, end: nextMatch.position + nextMatch.md.length};
             }
         }
-
+        
         function checkAllowedEmptyContent(content) {
+            if(content === undefined) return false;
+
             let status = true;
 
             const md = symbol.tag === "blockquote" ? ">" : "<";
@@ -246,6 +239,39 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             for(let i = 0; i < content.length - brLength; i++) if(content[i] !== " " && content[i] !== md) status = false;
             
             return status;
+        }
+
+        function checkUnparsedClassicPairs() {
+            unparsedClassicPairs.forEach(pair => {
+                const pairContent = parsedContent.substring(pair.start, pair.end);
+                let newPairContent = "";
+
+                const lines = pairContent.split("\n");
+                const newLines = [];
+
+                let stop = false;
+                
+                for(let i = lines.length - 1; i >= 0; i--) {
+                    const current = lines[i];
+                    const next = lines[i - 1];
+                    
+                    const allowedEmptyContent = {
+                        current: checkAllowedEmptyContent(current),
+                        next: checkAllowedEmptyContent(next)
+                    };
+                    
+                    if(!allowedEmptyContent.current) stop = true;
+                    
+                    if(!stop && (allowedEmptyContent.current && !allowedEmptyContent.next)) newLines.push(current);
+                    if(stop) newLines.push(current)
+                }
+
+                newLines.reverse();
+                newLines.forEach(line => { newPairContent += `${line}\n` });
+
+                const closestPairMatch = findClosestMath(parsedContent, escapeRegex(newPairContent));
+                pairs.classic.push({ start: closestPairMatch.index, end: closestPairMatch.index + closestPairMatch[0].length });
+            });
         }
 
         function formatInnerPairTemplate(nextMatch, addNew) {            
