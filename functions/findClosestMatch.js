@@ -1,5 +1,7 @@
+import escapeRegex from "./escapeRegex.js";
+
 export default function findClosestMath(content, match) {
-    const matches = [...content.matchAll(match)];
+    const matches = [...content.matchAll(escapeRegex(match))];
     let closestMatch = matches[0];
 
     if(matches.length > 1) for(let i = 1; i < matches.length; i++) {

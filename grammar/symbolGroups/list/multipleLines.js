@@ -40,6 +40,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             addingDifference = 0;
         }
 
+        removeMd(true);
+
         function getMatches() {
             if(i === 0) return matches;
 
@@ -55,7 +57,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
         addPairs();
 
-        removeMd();
+        removeMd(true);
     }
 
     function getPairs(matches) {
@@ -137,7 +139,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                         lines.forEach((line, index) => { if(line.match(notEmptyPairRegex)) newPair += line + (index === lines.length - 1 ? "" : "\n") });
 
                         const closestPairMatch = findClosestMath(parsedContent, newPair);
-                        if(closestPairMatch === undefined) console.log(newPair)
                         replacePairsClassic.push({ pair: { start: closestPairMatch.index, end: closestPairMatch.index + closestPairMatch[0].length }, replace: pair });
                     });
 
@@ -269,7 +270,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 newLines.reverse();
                 newLines.forEach(line => { newPairContent += `${line}\n` });
 
-                const closestPairMatch = findClosestMath(parsedContent, escapeRegex(newPairContent));
+                const closestPairMatch = findClosestMath(parsedContent, newPairContent);
                 pairs.classic.push({ start: closestPairMatch.index, end: closestPairMatch.index + closestPairMatch[0].length });
             });
         }
@@ -772,7 +773,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         return result;
     }
 
-    function removeMd() {
+    function removeMd(removeLastBrStatus) {
         const patterns = {
             fakeBlockquotes: "((?<=<blockquote.+\">)>|^>)(?=[\\s>]*<br>)",
             classicMd: "((?<=<blockquote.+\">)>|^>)\\s*(?!(<br>|$))",
@@ -789,13 +790,15 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         parsedContent = parsedContent.replace(remove.classicMd, "");
         parsedContent = parsedContent.replace(remove.nxtlvlMd, "");
 
-        removeLastBr();
+        if(removeLastBrStatus) removeLastBr();
         
         function removeLastBr() {
-            const targetTags = ["blockquote", "details", "summary"];
+            const targets = symbol.tag === "blockquote" ? ["blockquote"] : ["details", "summary"];
             
-            targetTags.forEach(targetTag => {
-                const lastBrTags = [...parsedContent.matchAll(`<br></${targetTag}>`)];
+            targets.forEach(target => {
+                const lastBrRegex = new RegExp(`(?<!\\s*<br>\\s*)<br>\\s*</${target}>`,"gm");
+                const lastBrTags = [...parsedContent.matchAll(lastBrRegex)];
+
                 let removingDifference = 0;
 
                 lastBrTags.forEach(lastBrTag => {
