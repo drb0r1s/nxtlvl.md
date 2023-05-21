@@ -1,3 +1,5 @@
+import Match from "../functions/Match.js";
+
 const Syntax = {
     groups: {
         oneLine: [
@@ -82,8 +84,8 @@ const Syntax = {
         const matches = [];
         const regex = new RegExp(pattern, "gm");
 
-        const advancedMatches = [...content.matchAll(regex)];
-        advancedMatches.forEach(advancedMatch => matches.push({...symbol, md: advancedMatch[0], position: advancedMatch.index}));
+        const advancedMatches = Match.all(content, regex);
+        advancedMatches.forEach(advancedMatch => matches.push({...symbol, md: advancedMatch.content, positions: advancedMatch.positions}));
 
         return matches;
     },

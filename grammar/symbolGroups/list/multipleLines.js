@@ -1,8 +1,8 @@
 import Log from "../../../Log.js";
 import Syntax from "../../Syntax.js";
+import Match from "../../../functions/Match.js";
 import generateTags from "../../../functions/generateTags.js";
 import escapeRegex from "../../../functions/escapeRegex.js";
-import findClosestMatch from "../../../functions/findClosestMatch.js";
 import isLineEmpty from "../../../functions/isLineEmpty.js";
 import StartSpaces from "../../../functions/StartSpaces.js";
 
@@ -89,7 +89,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             
             if(specialStatus) {
                 result = true;
-                specialMd.push({ type: match.md[0] === "(" ? "opened" : "closed", position: match.position });
+                specialMd.push({ type: match.md[0] === "(" ? "opened" : "closed", position: match.positions.start });
             }
 
             return result;
@@ -144,8 +144,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                             if(!isLineEmpty(getNoMdLine(line))) newPair += line + (index === lines.length - 1 ? "" : "\n");
                         });
 
-                        const closestPairMatch = findClosestMatch(parsedContent, newPair, pair.start);
-                        replacePairsClassic.push({ pair: { start: closestPairMatch.index, end: closestPairMatch.index + closestPairMatch[0].length }, replace: pair });
+                        const closestPairMatch = Match.closest(parsedContent, newPair, pair.start);
+                        replacePairsClassic.push({ pair: closestPairMatch.positions, replace: pair });
                     });
 
                     if(replacePairsClassic.length > 0) {
@@ -214,24 +214,24 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         }
 
         function classicSearch(match, nextMatch) {
-            const eol = match.position + match.md.length;
+            const eol = match.positions.end;
             const allowedEmptyContent = checkAllowedEmptyContent(match.md);
             
-            if(Object.keys(pairTemplate).length === 0) pairTemplate = { start: match.position, end: eol };
-            if(allowedEmptyContent && (pairTemplate.start === match.position)) return pairTemplate = {};
+            if(Object.keys(pairTemplate).length === 0) pairTemplate = match.positions;
+            if(allowedEmptyContent && (pairTemplate.start === match.positions.start)) return pairTemplate = {};
 
-            if(!nextMatch || (eol + 1 !== nextMatch.position)) {
+            if(!nextMatch || (eol + 1 !== nextMatch.positions.start)) {
                 unparsedClassicPairs.push(pairTemplate)
                 if(inner.pairTemplates.length > 0) resetInnerPairTemplate();
 
                 pairTemplate = {};
             }
 
-            else if(eol + 1 === nextMatch.position) {
-                if(parsedContent[nextMatch.position] === " ") formatInnerPairTemplate(nextMatch);
+            else if(eol + 1 === nextMatch.positions.start) {
+                if(parsedContent[nextMatch.positions.start] === " ") formatInnerPairTemplate(nextMatch);
                 else if(inner.pairTemplates.length > 0) resetInnerPairTemplate();
 
-                pairTemplate = {...pairTemplate, end: nextMatch.position + nextMatch.md.length};
+                pairTemplate = {...pairTemplate, end: nextMatch.positions.end};
             }
         }
         
@@ -276,26 +276,26 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 newLines.reverse();
                 newLines.forEach(line => { newPairContent += `${line}\n` });
 
-                const closestPairMatch = findClosestMatch(parsedContent, newPairContent, pair.start);
-                pairs.classic.push({ start: closestPairMatch.index, end: closestPairMatch.index + closestPairMatch[0].length });
+                const closestPairMatch = Match.closest(parsedContent, newPairContent, pair.start);
+                pairs.classic.push(closestPairMatch.positions);
             });
         }
 
         function formatInnerPairTemplate(nextMatch, addNew) {            
             if(inner.pairTemplates.length === 0 || addNew) {
-                inner.pairTemplates.push({ start: nextMatch.position, end: nextMatch.position + nextMatch.md.length });
+                inner.pairTemplates.push(nextMatch.positions);
                 if(!addNew) return;
             }
             
             if(inner.starts.length === 0 || addNew) inner.starts.push(addNew || inner.pairTemplates[inner.pairTemplates.length - 1].start);
             
             const prevLine = StartSpaces.count(parsedContent.substring(inner.pairTemplates[inner.pairTemplates.length - 1].start, inner.pairTemplates[inner.pairTemplates.length - 1].end));
-            const line = StartSpaces.count(parsedContent.substring(nextMatch.position, nextMatch.position + nextMatch.md.length));
+            const line = StartSpaces.count(parsedContent.substring(nextMatch.positions.start, nextMatch.positions.end));
             
             if(prevLine === line) appendPairs();
             
             else {
-                if(prevLine < line) formatInnerPairTemplate(nextMatch, nextMatch.position);
+                if(prevLine < line) formatInnerPairTemplate(nextMatch, nextMatch.positions.start);
 
                 if(prevLine > line) {
                     while(inner.starts.length !== line) inner.starts.pop();
@@ -315,7 +315,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             }
 
             function appendPairs() {
-                inner.starts.forEach(start => updateInnerPairTemplate(start, { end: nextMatch.position + nextMatch.md.length }));
+                inner.starts.forEach(start => updateInnerPairTemplate(start, { end: nextMatch.positions.end }));
             }
         }
 
@@ -533,14 +533,14 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 let boundaries = [];
                 const specialSymbol = !isNaN(parseInt(list.isSpecial)) ? `${list.isSpecial}.` : list.isSpecial;
 
-                const innerSymbolsSearch = [...list.content.matchAll(`${escapeRegex("(" + specialSymbol)}<br>|${escapeRegex(specialSymbol + ")")}<br>`)];
+                const innerSymbolsSearch = Match.all(list.content, `${escapeRegex("(" + specialSymbol)}<br>|${escapeRegex(specialSymbol + ")")}<br>`);
                 let i = 0;
                 
                 while(innerSymbolsSearch.length !== 0) {
                     if(i === innerSymbolsSearch.length - 1) return i = 0;
 
-                    const current = { content: innerSymbolsSearch[i][0], index: innerSymbolsSearch[i].index };
-                    const next = { content: innerSymbolsSearch[i + 1][0], index: innerSymbolsSearch[i + 1].index };
+                    const current = { content: innerSymbolsSearch[i].content, index: innerSymbolsSearch[i].positions.start };
+                    const next = { content: innerSymbolsSearch[i + 1].content, index: innerSymbolsSearch[i + 1].positions.start };
 
                     if(checkSymbolType(current.content) === "opened" && checkSymbolType(next.content) === "closed") {
                         boundaries.push({ start: current.index, end: next.content.length + next.index  });
@@ -642,11 +642,11 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                         lineCounter++;
                     });
 
-                    const liMatches = [...parsedContent.matchAll(escapeRegex(row))];
+                    const liMatches = Match.all(parsedContent, escapeRegex(row));
                     let liAddingDifference = 0;
     
                     liMatches.forEach((liMatch, index) => {
-                        const positions = { start: liMatch.index + liAddingDifference, end: liMatch[0].length + liMatch.index + liAddingDifference };
+                        const positions = { start: liMatch.positions.start + liAddingDifference, end: liMatch.positions.end + liAddingDifference };
                         parsedContent = parsedContent.substring(0, positions.start) + parsedLiContent + parsedContent.substring(positions.end);
                         
                         const difference = Math.abs(row.length - parsedLiContent.length);
@@ -800,12 +800,12 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             
             targets.forEach(target => {
                 const lastBrRegex = new RegExp(`(?<!\\s*<br>\\s*)<br>\\s*</${target}>`,"gm");
-                const lastBrTags = [...parsedContent.matchAll(lastBrRegex)];
+                const lastBrTags = Match.all(parsedContent, lastBrRegex);
 
                 let removingDifference = 0;
 
                 lastBrTags.forEach(lastBrTag => {
-                    const realPosition = lastBrTag.index - removingDifference;
+                    const realPosition = lastBrTag.positions.start - removingDifference;
                     const brLength = 4;
 
                     parsedContent = parsedContent.substring(0, realPosition) + parsedContent.substring(realPosition + brLength);

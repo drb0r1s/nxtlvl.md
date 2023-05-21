@@ -1,5 +1,6 @@
 import Log from "../../Log.js";
 import Convert from "../Convert.js";
+import Match from "../Match.js";
 
 export default function toObject(rules) {
     if(!rules) return Log.error("UNDEFINED.RULES");
@@ -8,12 +9,12 @@ export default function toObject(rules) {
     const noBlankRules = rules.replaceAll(/[\s\n]+/gm, "");
 
     let rulesMap = [];
-    const openedBlocks = [...noBlankRules.matchAll("{")];
+    const openedBlocks = Match.all(noBlankRules, "{");
 
     openedBlocks.forEach(openedBlock => {
         const ruleMapTemplate = {
-            positions: { start: openedBlock.index, end: getClosedBlockIndex(openedBlock.index) },
-            selectors: [getSelector(openedBlock.index)]
+            positions: { start: openedBlock.positions.start, end: getClosedBlockIndex(openedBlock.positions.start) },
+            selectors: [getSelector(openedBlock.positions.start)]
         };
 
         rulesMap.push(ruleMapTemplate);
@@ -150,23 +151,23 @@ export default function toObject(rules) {
         let innerBlockPairTemplate = { start: -1, end: -1 };
         
         const innerBlocksRegex = /[{}]/gm
-        const innerBlocks = [...content.matchAll(innerBlocksRegex)];
+        const innerBlocks = Match.all(content, innerBlocksRegex);
 
         let skip = 0;
         
         innerBlocks.forEach(innerBlock => {
-            if(!skip && (innerBlockPairTemplate.start === -1) && (innerBlock[0] === "{")) return innerBlockPairTemplate.start = innerBlock.index;
+            if(!skip && (innerBlockPairTemplate.start === -1) && (innerBlock.content === "{")) return innerBlockPairTemplate.start = innerBlock.positions.start;
             
-            if((innerBlockPairTemplate.start > -1) && (innerBlock[0] === "{")) skip++;
+            if((innerBlockPairTemplate.start > -1) && (innerBlock.content === "{")) skip++;
             
-            if(!skip && (innerBlockPairTemplate.end === -1) && (innerBlock[0] === "}")) {
-                innerBlockPairTemplate.end = innerBlock.index;
+            if(!skip && (innerBlockPairTemplate.end === -1) && (innerBlock.content === "}")) {
+                innerBlockPairTemplate.end = innerBlock.positions.start;
                 innerBlockPairs.push(innerBlockPairTemplate);
 
                 innerBlockPairTemplate = { start: -1, end: -1 };
             }
 
-            if(skip && (innerBlockPairTemplate.start > -1) && (innerBlock[0] === "}")) skip--;
+            if(skip && (innerBlockPairTemplate.start > -1) && (innerBlock.content === "}")) skip--;
         });
 
         return innerBlockPairs;

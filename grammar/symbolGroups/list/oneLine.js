@@ -3,7 +3,7 @@ export default function oneLine({ content, symbol, matches, tags }) {
     let addingDifference = 0;
 
     matches.forEach(match => {
-        const realPositions = { start: match.position + addingDifference, end: match.position + match.md.length + addingDifference };
+        const realPositions = { start: match.positions.start + addingDifference, end: match.positions.end + addingDifference };
         const removeBr = match.md.substring(match.md.length - 4) === "<br>" ? 4 : 0;
 
         parsedContent = parsedContent.substring(0, realPositions.start) + tags.opened + parsedContent.substring(realPositions.start, realPositions.end - removeBr) + tags.closed + parsedContent.substring(realPositions.end);

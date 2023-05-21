@@ -1,3 +1,5 @@
+import Match from "../Match.js";
+
 export default function parseSelector(selector) {
     const parsedSelector = [];
     
@@ -34,12 +36,12 @@ function convertSelector(selector) {
     }
 
     const specialSymbols = /!|@|#|\$|%|\^|&|\*|\(|\)|_|\+|\/|\\|\<|\>|\?|,|(?<=\.)\.(?=\.|$)|;|'|"|\||:|-/gm;
-    const matches = [...convertedSelector.matchAll(specialSymbols)];
+    const matches = Match.all(convertedSelector, specialSymbols);
 
     let addingDifference = 0;
 
     matches.forEach(match => {
-        const realPosition = match.index + addingDifference;
+        const realPosition = match.positions.start + addingDifference;
         convertedSelector = convertedSelector.substring(0, realPosition) + "\\" + convertedSelector.substring(realPosition);
 
         addingDifference += "\\".length;

@@ -1,5 +1,6 @@
 import parseSymbolGroups from "./symbolGroups/parseSymbolGroups.js";
 import StartSpaces from "../functions/StartSpaces.js";
+import Match from "../functions/Match.js";
 
 export default function parser(content) {
     let parsedContent = content;
@@ -34,10 +35,10 @@ export default function parser(content) {
                     break;
                 case "whitespaces":
                     const potentialInnerListRegex = new RegExp("^(\\s+|\\t).+", "gm");
-                    const matches = { all: [...parsedContent.matchAll(r)], potentialInnerList: [...parsedContent.matchAll(potentialInnerListRegex)] };
+                    const matches = { all: Match.all(parsedContent, r), potentialInnerList: Match.all(parsedContent, potentialInnerListRegex) };
                     
                     matches.potentialInnerList.forEach(match => {
-                        if(match[0].match(regex.innerList)) potentialInnerListMatches.push({ content: match[0], position: match.index });
+                        if(match.content.match(regex.innerList)) potentialInnerListMatches.push({ content: match.content, position: match.positions.start });
                     });
 
                     checkPotentialInnerListMatches();
@@ -47,12 +48,12 @@ export default function parser(content) {
                         let block = false;
                         
                         for(let i = 0; i < realInnerListMatches.length; i++) for(let j = 0; j < realInnerListMatches[i].length; j++) {
-                            if(potentialInnerListMatch[0] === realInnerListMatches[i][j]) block = true;
+                            if(potentialInnerListMatch.content === realInnerListMatches[i][j]) block = true;
                         }
 
                         if(block) return;
 
-                        const realPositions = { start: match.index - removingDifference, end: match[0].length + match.index - removingDifference };
+                        const realPositions = { start: match.positions.start - removingDifference, end: match.positions.end - removingDifference };
         
                         parsedContent = parsedContent.substring(0, realPositions.start) + parsedContent.substring(realPositions.end);
                         removingDifference += realPositions.end - realPositions.start;

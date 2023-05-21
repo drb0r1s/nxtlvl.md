@@ -27,13 +27,7 @@ export default function parseSymbolGroups(content) {
             const matches = Syntax.match(parsedContent, symbol, pattern);
             const tags = generateTags(symbol);
             
-            parsedContent = parseGroup({
-                content: parsedContent,
-                symbol,
-                pattern,
-                matches,
-                tags
-            });
+            parsedContent = parseGroup({ content: parsedContent, symbol, pattern, matches, tags });
         });
     });
 
