@@ -127,38 +127,58 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                         const pairContent = parsedContent.substring(pair.start, pair.end);
 
                         const lines = pairContent.split("\n");
+
+                        if(!lines[0]) lines.shift();
+                        if(!lines[lines.length - 1]) lines.pop();
+
                         let emptyStatus = false;
+                        
+                        const newPairs = [];
+                        let pairTemplate = "";
+                        let splitPair = false;
 
                         const getNoMdLine = line => line.replace(new RegExp(symbol.md), "");
 
-                        lines.forEach(line => {
-                            if(!line) return;
-                            if(!emptyStatus) emptyStatus = isLineEmpty(getNoMdLine(line));
+                        lines.forEach((line, index) => { 
+                            const lineEmptyStatus = isLineEmpty(getNoMdLine(line));
+
+                            if((!splitPair && lineEmptyStatus)) {
+                                emptyStatus = true;
+                                splitPair = true;
+
+                                if(pairTemplate) newPairs.push(pairTemplate);
+                                pairTemplate = "";
+                            }
+
+                            if(splitPair && !lineEmptyStatus) splitPair = false;
+                            
+                            if(!splitPair) pairTemplate += line + (index === lines.length - 1 ? "" : "\n");
+                            if(emptyStatus && (index === lines.length - 1) && pairTemplate) newPairs.push(pairTemplate);
                         });
 
                         if(!emptyStatus) return;
+
+                        const replaceWith = [];
                         
-                        let newPair = "";
-                        
-                        lines.forEach((line, index) => {
-                            if(!isLineEmpty(getNoMdLine(line))) newPair += line + (index === lines.length - 1 ? "" : "\n");
+                        newPairs.forEach(newPair => {
+                            const closestPairMatch = Match.closest(parsedContent, newPair, pair.start);
+                            replaceWith.push(closestPairMatch.positions);
                         });
 
-                        const closestPairMatch = Match.closest(parsedContent, newPair, pair.start);
-                        replacePairsClassic.push({ pair: closestPairMatch.positions, replace: pair });
+                        replacePairsClassic.push({ replace: pair, replaceWith });
                     });
 
                     if(replacePairsClassic.length > 0) {
                         const newPairsClassic = [];
-
+                        
                         pairs.classic.forEach(pair => {
                             let status = true;
-                            replacePairsClassic.forEach(replacePair => { if(pair.start === replacePair.replace.start && pair.end === replacePair.replace.end) status = false });
+                            replacePairsClassic.forEach(p => { if(pair.start === p.replace.start && pair.end === p.replace.end) status = false });
 
                             if(status) newPairsClassic.push(pair);
                         });
 
-                        replacePairsClassic.forEach(replacePair => newPairsClassic.push(replacePair.pair));
+                        replacePairsClassic.forEach(p => newPairsClassic.push(...p.replaceWith));
 
                         let swap;
 
