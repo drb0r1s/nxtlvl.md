@@ -140,6 +140,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                         const getNoMdLine = line => line.replace(new RegExp(symbol.md), "");
 
                         lines.forEach((line, index) => { 
+                            if(!line) return;
+
                             const lineEmptyStatus = isLineEmpty(getNoMdLine(line));
 
                             if((!splitPair && lineEmptyStatus)) {
@@ -367,11 +369,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
             if(symbol.tag === "ol" || symbol.tag === "ul") {
                 const tagsMd = specialStatus ? specialStatus: getClassicMd(innerContent);
-                
-                let exists = false;
-                doubleParsing.lists.forEach(list => { if(list.content === innerContent && list.md === tagsMd) exists = true });
-                
-                if(!exists) doubleParsing.lists.push({ content: innerContent, md: tagsMd, isSpecial: specialStatus });
+                doubleParsing.lists.push({ content: innerContent, positions: realPositions, md: tagsMd, isSpecial: specialStatus });
             }
 
             const parsedInnerContent = removeAllowedEmptyClassicMd();
@@ -553,7 +551,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 let boundaries = [];
                 const specialSymbol = !isNaN(parseInt(list.isSpecial)) ? `${list.isSpecial}.` : list.isSpecial;
 
-                const innerSymbolsSearch = Match.all(list.content, `${escapeRegex("(" + specialSymbol)}<br>|${escapeRegex(specialSymbol + ")")}<br>`);
+                const innerSymbolsSearch = Match.all(list.content, `${escapeRegex("(" + specialSymbol)}\\s*<br>|${escapeRegex(specialSymbol + ")")}\\s*<br>`);
                 let i = 0;
                 
                 while(innerSymbolsSearch.length !== 0) {
@@ -650,30 +648,22 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 let lineCounter = symbol.tag === "ol" ? parseInt(list.md) : 0;
                 
                 rows.forEach(row => {
+                    const tagsMd = symbol.tag === "ol" ? lineCounter : list.md;
+                    const liTags = generateTags(symbol, { tag: "li", md: tagsMd });
+
                     const lines = row.split("\n");
 
                     lines.forEach(line => {
                         if(!line) return;
-                    
-                        const tagsMd = symbol.tag === "ol" ? lineCounter : list.md;
-                        const liTags = generateTags(symbol, { tag: "li", md: tagsMd });
     
                         parsedLiContent += `${liTags.opened}${removeListMd(StartSpaces.cut(line.substring(0, line.length - 4)), list.isSpecial)}${liTags.closed}`;
                         lineCounter++;
                     });
 
-                    const liMatches = Match.all(parsedContent, escapeRegex(row));
-                    let liAddingDifference = 0;
-    
-                    liMatches.forEach((liMatch, index) => {
-                        const positions = { start: liMatch.positions.start + liAddingDifference, end: liMatch.positions.end + liAddingDifference };
-                        parsedContent = parsedContent.substring(0, positions.start) + parsedLiContent + parsedContent.substring(positions.end);
-                        
-                        const difference = Math.abs(row.length - parsedLiContent.length);
-                        liAddingDifference += difference;
+                    const liMatch = Match.closest(parsedContent, row, list.positions.start);
+                    parsedContent = parsedContent.substring(0, liMatch.positions.start) + parsedLiContent + parsedContent.substring(liMatch.positions.end);
 
-                        if(index === liMatches.length - 1) parsedLiContent = "";
-                    });
+                    parsedLiContent = "";
                 });
 
                 function removeListMd(content, isSpecial) {
