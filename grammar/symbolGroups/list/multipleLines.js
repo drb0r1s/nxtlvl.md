@@ -15,8 +15,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     const mdCombinations = getMdCombinations();
     let addingDifference = 0;
 
-    if(symbol.tag === "blockquote") {
-        const { multipleLines } = Syntax.patterns.get({ group: "multipleLines", md: ">" });
+    if(symbol.tag === "blockquote" || symbol.tag === "details") {
+        const { multipleLines } = Syntax.patterns.get({ group: "multipleLines", md: symbol.md });
         const [pattern] = multipleLines;
 
         let i = 0;
@@ -45,9 +45,12 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
         function getMatches() {
             if(i === 0) return matches;
-
+            
             const noSpecialMdPattern = pattern.split("|^\\(");
+            //const finalPattern = symbol.tag === "blockquote" ? noSpecialMdPattern[0] : noSpecialMdPattern[0] + "|(?<=</summary>)<(?=\\s+)";
+
             const newMatches = Syntax.match(parsedContent, symbol, noSpecialMdPattern[0]);
+            
             return newMatches;
         }
     }
@@ -359,12 +362,13 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
         function addPair(pair) {
             const { realPositions, innerContent, validTags, specialStatus } = initializePair();
-
+            const parsedInnerContent = removeAllowedEmptyClassicMd();
+            
             if(symbol.tag === "details") {
                 let exists = false;
-                if(doubleParsing.collapsible.indexOf(innerContent) > -1) exists = true;
+                if(doubleParsing.collapsible.indexOf(parsedInnerContent) > -1) exists = true;
 
-                if(!exists) doubleParsing.collapsible.push(innerContent);
+                if(!exists) doubleParsing.collapsible.push(parsedInnerContent);
             }
 
             if(symbol.tag === "ol" || symbol.tag === "ul") {
@@ -372,7 +376,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 doubleParsing.lists.push({ content: innerContent, positions: realPositions, md: tagsMd, isSpecial: specialStatus });
             }
 
-            const parsedInnerContent = removeAllowedEmptyClassicMd();
             const innerContentDifference = Math.abs(innerContent.length - parsedInnerContent.length);
             
             parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + parsedInnerContent + parsedContent.substring(realPositions.end);
@@ -448,7 +451,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 let newInnerContent = "";
                 
                 const lines = innerContent.split("\n");
-                const emptyLine = /^[>\s]+$/g
+                const emptyLine = /^[<>\s]+$/g
     
                 lines.forEach((line, index) => {
                     const noBrLine = line.substring(line.length - 4) === "<br>" ? line.substring(0, line.length - 4) : line;
@@ -492,24 +495,9 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
             function removeCollapsibleMd(lines) {
                 const noMdLines = [];
+                const noMdRegex = /<\s+/
 
-                lines.forEach(line => {
-                    let noMdLine = "";
-                    let block = true;
-
-                    for(let i = 0; i < line.length; i++) {
-                        const removableMd = index => (line[index] !== "<" && line[index] !== " ");
-
-                        if(
-                            (block && removableMd(i)) ||
-                            (block && (line[i] === "<" && removableMd(i + 1)))
-                        ) block = false;
-                        
-                        if(!block) noMdLine += line[i];
-                    }
-
-                    if(noMdLine) noMdLines.push(noMdLine);
-                });
+                lines.forEach(line => noMdLines.push(line.replace(noMdRegex, "")));
 
                 return noMdLines;
             }
@@ -551,7 +539,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 let boundaries = [];
                 const specialSymbol = !isNaN(parseInt(list.isSpecial)) ? `${list.isSpecial}.` : list.isSpecial;
 
-                const innerSymbolsSearch = Match.all(list.content, `${escapeRegex("(" + specialSymbol)}\\s*<br>|${escapeRegex(specialSymbol + ")")}\\s*<br>`);
+                const innerSymbolsSearch = Match.all(list.content, `${escapeRegex("(" + specialSymbol)}<br>|${escapeRegex(specialSymbol + ")")}<br>`);
                 let i = 0;
                 
                 while(innerSymbolsSearch.length !== 0) {
@@ -789,17 +777,20 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     function removeMd(removeLastBrStatus) {
         const patterns = {
             fakeBlockquotes: "((?<=<blockquote.+\">)>|^>)(?=[\\s>]*<br>)",
+            fakeDetails: "((?<=<details.+\">)<(?=\\s)|^<(?=\\s))(?=[\\s<]*<br>)",
             classicMd: "((?<=<blockquote.+\">)>|^>)\\s*(?!(<br>|$))",
             nxtlvlMd: `\\(${symbol.md}\\s*<br>(?=<${symbol.tag}.+">)|(?<=<\\/${symbol.tag}>)${symbol.md}\\)\\s*<br>`
         };
     
         const remove = {
             fakeBlockquotes: new RegExp(patterns.fakeBlockquotes, "gm"),
+            fakeDetails: new RegExp(patterns.fakeDetails, "gm"),
             classicMd: new RegExp(patterns.classicMd, "gm"),
             nxtlvlMd: new RegExp(patterns.nxtlvlMd, "gm")
         };
-    
-        parsedContent = parsedContent.replace(remove.fakeBlockquotes, "&gt;");
+        
+        if(symbol.tag === "blockquote") parsedContent = parsedContent.replace(remove.fakeBlockquotes, "&gt;");
+        if(symbol.tag === "details") parsedContent = parsedContent.replace(remove.fakeDetails, "&lt;");
         parsedContent = parsedContent.replace(remove.classicMd, "");
         parsedContent = parsedContent.replace(remove.nxtlvlMd, "");
 

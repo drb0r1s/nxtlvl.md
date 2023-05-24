@@ -6,18 +6,23 @@ export default function upperLine({ content, matches, tags }) {
         const realPositions = { start: match.positions.start + addingDifference, end: match.positions.end + addingDifference };
         const removeBr = match.md.substring(match.md.length - 4) === "<br>" ? 4 : 0;
 
+        const cutContent = parsedContent.substring(realPositions.end + 1);
+        
+        const mdEnd = realPositions.end + 1 + cutContent.search("<br>") + removeBr;
+        const mdLine = parsedContent.substring(realPositions.end + 1, mdEnd);
+
         parsedContent = parsedContent.substring(0, realPositions.start) + tags.opened + parsedContent.substring(realPositions.start, realPositions.end - removeBr) + tags.closed + parsedContent.substring(realPositions.end);
         addingDifference += tags.opened.length + tags.closed.length - removeBr;
 
-        removeMd(realPositions.end + addingDifference);
+        removeMd({
+            start: match.positions.end + 1 + addingDifference,
+            end: match.positions.end + 1 + cutContent.search("<br>") + removeBr + addingDifference
+        }, mdLine.length);
     });
 
-    function removeMd(realPositionEnd) {
-        const cutContent = parsedContent.substring(realPositionEnd);
-        const mdEnd = realPositionEnd + cutContent.search("<br>") + 4;
-
-        parsedContent = parsedContent.substring(0, realPositionEnd) + parsedContent.substring(mdEnd);
-        addingDifference -= mdEnd;
+    function removeMd(positions, removeMdLine) {
+        parsedContent = parsedContent.substring(0, positions.start) + parsedContent.substring(positions.end);
+        addingDifference -= removeMdLine;
     }
 
     return parsedContent;

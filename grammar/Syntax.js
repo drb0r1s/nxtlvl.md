@@ -33,17 +33,17 @@ const Syntax = {
         multipleLines: [
             { tag: "blockquote", md: ">" },
             // NXTLVL:
-            { tag: "details", md: "((?<=\\()<(?=\\s*<br>)|<(?=\\)\\s*<br>)|<(?=\\s+))" },
+            { tag: "details", md: "((?<=\\()<(?=<br>)|<(?=\\)<br>)|<(?=\\s))", regex: true },
             // ----------
-            { tag: "ol", md: "\\s*[0-9]+\.(\\s+|(?=\\)?<br>))" },
-            { tag: "ul", md: "\\s*[*+-](\\s+|(?=\\)?<br>))" }
+            { tag: "ol", md: "\\s*[0-9]+\.(\\s+|(?=\\)?<br>))", regex: true },
+            { tag: "ul", md: "\\s*[*+-](\\s+|(?=\\)?<br>))", regex: true }
         ]
     },
 
     patterns: {
         oneLine: "((?<=^(>\\s*|<\\s+)){md}|^{md})(?!\\s*(<br>|$))\\s+.+(<br>|$)",
-        multipleLines: "((?<=^<(blockquote|details|ol|ul).+\">){md}|^{md}).+|^\\({md}\\s*<br>|^{md}\\)\\s*<br>",
-        upperLine: ".+<br>(?=\\n^{md}+(<br>|$))",
+        multipleLines: "((?<=^<(blockquote|details|summary|ol|ul).+\">){md}|^{md}).+|^\\({md}<br>|^{md}\\)<br>",
+        upperLine: "[^<>\\s].+<br>(?=\\n(^(>\\s*|<\\s+)|^){md}+(<br>|$))",
         classic: "(?<!<(b|i)\\sclass=\"nxtlvl\\sclassic\\s(b|i)\\s)({md}(?=.+{md})(?!\\s*{md}))(?!\">)|(?<!<(b|i)\\sclass=\"nxtlvl\\sclassic\\s(b|i)\\s)((?<={md}.+)(?<!{md}\\s*){md})(?!\">)",
         
         get: (params = {}) => {
@@ -111,7 +111,7 @@ const Syntax = {
                 const results = [];
 
                 const removeBackslash = /\\+/g;
-                const clearMd = symbol.md.replace(removeBackslash, "");
+                const clearMd = symbol.regex ? symbol.md : symbol.md.replace(removeBackslash, "");
                 
                 switch(true) {
                     case typeof tag === "string" && typeof md === "string":
