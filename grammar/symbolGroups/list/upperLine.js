@@ -21,8 +21,13 @@ export default function upperLine({ content, matches, tags }) {
     });
 
     function removeMd(positions, removeMdLine) {
-        parsedContent = parsedContent.substring(0, positions.start) + parsedContent.substring(positions.end);
-        addingDifference -= removeMdLine;
+        const removeMdContent = parsedContent.substring(positions.start, positions.end);
+        
+        let multipleLinesDifference = 0;
+        if(removeMdContent.startsWith(">") || removeMdContent.startsWith("< ")) multipleLinesDifference = 1;
+        
+        parsedContent = parsedContent.substring(0, positions.start) + parsedContent.substring(positions.end + multipleLinesDifference);
+        addingDifference -= removeMdLine + multipleLinesDifference;
     }
 
     return parsedContent;
