@@ -47,10 +47,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             if(i === 0) return matches;
             
             const noSpecialMdPattern = pattern.split("|^\\(");
-            //const finalPattern = symbol.tag === "blockquote" ? noSpecialMdPattern[0] : noSpecialMdPattern[0] + "|(?<=</summary>)<(?=\\s+)";
-
             const newMatches = Syntax.match(parsedContent, symbol, noSpecialMdPattern[0]);
-            
+
             return newMatches;
         }
     }
@@ -643,8 +641,9 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
                     lines.forEach(line => {
                         if(!line) return;
-    
-                        parsedLiContent += `${liTags.opened}${removeListMd(StartSpaces.cut(line.substring(0, line.length - 4)), list.isSpecial)}${liTags.closed}`;
+                        const brLength = line.substring(line.length - 4) === "<br>" ? 4 : 0;
+                        
+                        parsedLiContent += `${liTags.opened}${removeListMd(StartSpaces.cut(line.substring(0, line.length - brLength)), list.isSpecial)}${liTags.closed}`;
                         lineCounter++;
                     });
 
