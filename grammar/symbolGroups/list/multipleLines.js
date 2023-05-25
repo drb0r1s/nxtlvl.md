@@ -483,13 +483,25 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 const tags = generateTags(symbol, { tag: "summary", md: "<" });
                 
                 const lines = removeCollapsibleMd(collapsibleContent.split("\n"));
-                lines[0] = `${tags.opened}${lines[0]}${tags.closed}`;
+                console.log(lines)
+                lines[0] = `${tags.opened}${findStartingLine(lines)}${tags.closed}`;
 
                 let newCollapsibleContent = "";
-                lines.forEach(line => { newCollapsibleContent += line });
+
+                lines.forEach((line, index) => {
+                    if(!line) return;
+                    newCollapsibleContent += `${line}${index === lines.length - 1 ? "" : "\n"}`
+                });
 
                 parsedContent = parsedContent.replaceAll(collapsibleContent, newCollapsibleContent);
             });
+
+            function findStartingLine(lines) {
+                let result = "";
+                lines.forEach(line => { if(line && !result) result = line });
+
+                return result;
+            }
 
             function removeCollapsibleMd(lines) {
                 const noMdLines = [];
