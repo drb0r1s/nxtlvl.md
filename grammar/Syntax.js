@@ -35,13 +35,13 @@ const Syntax = {
             // NXTLVL:
             { tag: "details", md: "((?<=\\()<(?=<br>)|<(?=\\)<br>)|<(?=\\s))", regex: true },
             // ----------
-            { tag: "ol", md: "\\s*[0-9]+\.(\\s+|(?=\\)?<br>))", regex: true },
+            { tag: "ol", md: "\\s*[0-9]+\\.(\\s+|(?=\\)?<br>))", regex: true },
             { tag: "ul", md: "\\s*[*+-](\\s+|(?=\\)?<br>))", regex: true }
         ]
     },
 
     patterns: {
-        oneLine: "((?<=^(>\\s*|<\\s+)){md}|^{md})(?!\\s*(<br>|$))\\s+.+(<br>|$)",
+        oneLine: "((?<=^([<>\\s]+)?(>\\s*|<\\s+)){md}|^{md})(?!\\s*(<br>|$))\\s+.+(<br>|$)",
         multipleLines: "((?<=^<(blockquote|details|summary|ol|ul).+\">){md}|^{md}).+|^\\({md}<br>|^{md}\\)<br>",
         upperLine: "[^<>\\s].+<br>(?=\\n(^(>\\s*|<\\s+)|^){md}+(<br>|$))",
         classic: "(?<!<(b|i)\\sclass=\"nxtlvl\\sclassic\\s(b|i)\\s)({md}(?=.+{md})(?!\\s*{md}))(?!\">)|(?<!<(b|i)\\sclass=\"nxtlvl\\sclassic\\s(b|i)\\s)((?<={md}.+)(?<!{md}\\s*){md})(?!\">)",

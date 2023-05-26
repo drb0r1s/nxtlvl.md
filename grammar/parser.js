@@ -80,10 +80,13 @@ export default function parser(content) {
             let realMatchBlock = [];
 
             let parentSpaces = -1;
+            let removingDifference = 0;
 
             for(let i = 0; i < potentialInnerListMatches.length; i++) {
-                const current = potentialInnerListMatches[i];
-                const next = potentialInnerListMatches[i + 1];
+                const current = removeMultipleLinesCase(potentialInnerListMatches[i]);
+                const next = removeMultipleLinesCase(potentialInnerListMatches[i + 1]);
+                
+                console.log(next, current.content.length + current.position + 1)
                 
                 if(next && (current.content.length + current.position + 1 === next.position)) {
                     realMatchBlock.push(next.content);
@@ -104,6 +107,26 @@ export default function parser(content) {
                 realMatch.matches.forEach(match => { if(realMatch.spaces < StartSpaces.count(match)) childrenBlock.push(match) });
                 if(childrenBlock.length > 0) realInnerListMatches.push(childrenBlock);
             });
+
+            function removeMultipleLinesCase(innerList) {
+                if(!innerList) return null;
+                
+                //console.log(innerList)
+                let newInnerList = innerList;
+                
+                const multipleLinesCaseRegex = /(>|<\s)(?!$)/g;
+                const multipleLinesMatches = Match.all(innerList.content, multipleLinesCaseRegex);
+                
+                multipleLinesMatches.forEach(multipleLinesMatch => {
+                    //console.log(multipleLinesMatch)
+                    newInnerList.content = innerList.content.substring(multipleLinesMatch.positions.end);
+                    removingDifference += multipleLinesMatch.positions.end;
+                });
+
+                newInnerList.position -= removingDifference;
+
+                return innerList;
+            }
         }
 
         function formatInnerMatches(matches) {            

@@ -8,6 +8,7 @@ import StartSpaces from "../../../functions/StartSpaces.js";
 
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
+    //console.log(matches)
 
     const pairs = { classic: [], special: [], formatted: [] };
     let specialMd = [];
@@ -483,7 +484,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 const tags = generateTags(symbol, { tag: "summary", md: "<" });
                 
                 const lines = removeCollapsibleMd(collapsibleContent.split("\n"));
-                console.log(lines)
                 lines[0] = `${tags.opened}${findStartingLine(lines)}${tags.closed}`;
 
                 let newCollapsibleContent = "";
@@ -646,13 +646,14 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 let lineCounter = symbol.tag === "ol" ? parseInt(list.md) : 0;
                 
                 rows.forEach(row => {
-                    const tagsMd = symbol.tag === "ol" ? lineCounter : list.md;
-                    const liTags = generateTags(symbol, { tag: "li", md: tagsMd });
-
                     const lines = row.split("\n");
 
                     lines.forEach(line => {
                         if(!line) return;
+
+                        const tagsMd = symbol.tag === "ol" ? lineCounter : list.md;
+                        const liTags = generateTags(symbol, { tag: "li", md: tagsMd });
+
                         const brLength = line.substring(line.length - 4) === "<br>" ? 4 : 0;
                         
                         parsedLiContent += `${liTags.opened}${removeListMd(StartSpaces.cut(line.substring(0, line.length - brLength)), list.isSpecial)}${liTags.closed}`;
