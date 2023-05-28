@@ -24,7 +24,7 @@ export default function parser(content) {
         let potentialInnerListMatches = [];
         let realInnerListMatches = [];
 
-        let removingDifference = 0;
+        let addingDifference = 0;
 
         Object.values(regex).forEach((r, index) => {
             const key = Object.keys(regex)[index];
@@ -53,10 +53,10 @@ export default function parser(content) {
 
                         if(block) return;
 
-                        const realPositions = { start: match.positions.start - removingDifference, end: match.positions.end - removingDifference };
+                        const realPositions = { start: match.positions.start - addingDifference, end: match.positions.end - addingDifference };
         
                         parsedContent = parsedContent.substring(0, realPositions.start) + parsedContent.substring(realPositions.end);
-                        removingDifference += realPositions.end - realPositions.start;
+                        addingDifference += realPositions.end - realPositions.start;
                     });
 
                     break;
@@ -80,17 +80,16 @@ export default function parser(content) {
             let realMatchBlock = [];
 
             let parentSpaces = -1;
-            let removingDifference = 0;
 
             for(let i = 0; i < potentialInnerListMatches.length; i++) {
-                const current = removeMultipleLinesCase(potentialInnerListMatches[i]);
-                const next = removeMultipleLinesCase(potentialInnerListMatches[i + 1]);
-                
-                console.log(next, current.content.length + current.position + 1)
+                const current = potentialInnerListMatches[i];
+                const next = potentialInnerListMatches[i + 1];
                 
                 if(next && (current.content.length + current.position + 1 === next.position)) {
-                    realMatchBlock.push(next.content);
-                    if(parentSpaces === -1) parentSpaces = StartSpaces.count(current.content);
+                    const parsed = parseMultipleLinesCase(current, next);
+                    
+                    realMatchBlock.push(parsed.next);
+                    if(parentSpaces === -1) parentSpaces = StartSpaces.count(parsed.current);
                 }
 
                 else if(realMatchBlock.length > 0 && parentSpaces > -1) {
@@ -108,24 +107,24 @@ export default function parser(content) {
                 if(childrenBlock.length > 0) realInnerListMatches.push(childrenBlock);
             });
 
-            function removeMultipleLinesCase(innerList) {
-                if(!innerList) return null;
-                
-                //console.log(innerList)
-                let newInnerList = innerList;
+            function parseMultipleLinesCase(current, next) {                
+                const defaultContent = { current: current.content, next: next.content };
+                let parsed = defaultContent;
                 
                 const multipleLinesCaseRegex = /(>|<\s)(?!$)/g;
-                const multipleLinesMatches = Match.all(innerList.content, multipleLinesCaseRegex);
+                let multipleLinesCase = true;
                 
-                multipleLinesMatches.forEach(multipleLinesMatch => {
-                    //console.log(multipleLinesMatch)
-                    newInnerList.content = innerList.content.substring(multipleLinesMatch.positions.end);
-                    removingDifference += multipleLinesMatch.positions.end;
+                Object.keys(parsed).forEach((key, index) => {
+                    const value = Object.values(parsed)[index];
+                    
+                    const multipleLinesMatches = Match.all(value, multipleLinesCaseRegex);
+                    if(multipleLinesMatches.length === 0) return multipleLinesCase = false;
+
+                    multipleLinesMatches.forEach(multipleLinesMatch => { parsed = {...parsed, [key]: value.substring(multipleLinesMatch.positions.end)} });
                 });
 
-                newInnerList.position -= removingDifference;
-
-                return innerList;
+                if(!multipleLinesCase) return defaultContent;
+                return parsed;
             }
         }
 

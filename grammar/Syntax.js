@@ -9,6 +9,7 @@ const Syntax = {
             { tag: "h4", md: "####" },
             { tag: "h5", md: "#####" },
             { tag: "h6", md: "######" },
+            { tag: "pre", md: "@" }
         ],
         
         upperLine: [

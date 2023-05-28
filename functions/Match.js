@@ -24,5 +24,7 @@ function closest(content, match, originalMatchPosition) {
         else if((originalMatchPosition > closestMatch.positions.start) && (originalMatchPosition < matches[i].positions.start)) closestMatch = matches[i];
     }
 
+    if(closestMatch === undefined) console.log(content)
+
     return closestMatch;
 }

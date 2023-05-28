@@ -1,6 +1,10 @@
+import Convert from "../../../functions/Convert.js";
+
 export default function oneLine({ content, symbol, matches, tags }) {
     let parsedContent = content;
     let addingDifference = 0;
+
+    if(symbol.tag === "pre") console.log(Convert.toASCII("NXTLVL.md"))
 
     matches.forEach(match => {
         const realPositions = { start: match.positions.start + addingDifference, end: match.positions.end + addingDifference };

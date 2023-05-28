@@ -1,7 +1,7 @@
 import Log from "./Log.js";
 import parser from "./grammar/parser.js";
 import Style from "./functions/Style/index.js";
-import defaultStyleRules from "./defaultStyleRules.js";
+import defaultStyleRules from "./functions/data/defaultStyleRules.js";
 
 export default class NXTLVL {
     constructor(content = "", settings) {

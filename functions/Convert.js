@@ -1,4 +1,6 @@
-const Convert = { camelToKebab, kebabToCamel, reverse };
+import ASCII from "./data/ASCII.js";
+
+const Convert = { camelToKebab, kebabToCamel, reverse, toASCII };
 
 function camelToKebab(camel) {
     let kebab = "";
@@ -34,6 +36,15 @@ function reverse(string) {
     for(let i = string.length - 1; i >= 0; i--) reversedString += string[i];
     
     return reversedString;
+}
+
+function toASCII(string) {
+    const characters = [...string];
+    let asciiString = "";
+
+    for(let i = 0; i < characters.length; i++) Object.keys(ASCII).forEach((key, index) => { if(key === characters[i]) asciiString += Object.values(ASCII)[index] });
+
+    return asciiString;
 }
 
 export default Convert;

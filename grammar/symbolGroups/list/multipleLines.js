@@ -8,7 +8,6 @@ import StartSpaces from "../../../functions/StartSpaces.js";
 
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
-    //console.log(matches)
 
     const pairs = { classic: [], special: [], formatted: [] };
     let specialMd = [];
@@ -787,6 +786,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     }
 
     function removeMd(removeLastBrStatus) {
+        // ((?<=<blockquote.+\">)>(\\s*(?![0-9]+\\.|\\*|\\+|-)?)|^>(\\s*(?![0-9]+\\.|\\*|\\+|-))?)(?!(<br>|$))
+        
         const patterns = {
             fakeBlockquotes: "((?<=<blockquote.+\">)>|^>)(?=[\\s>]*<br>)",
             fakeDetails: "((?<=<details.+\">)<(?=\\s)|^<(?=\\s))(?=[\\s<]*<br>)",
