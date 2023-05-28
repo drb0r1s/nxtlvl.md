@@ -1,4 +1,4 @@
-import ASCII from "./data/ASCII.js";
+import ASCII from "../data/ASCII.js";
 
 const Convert = { camelToKebab, kebabToCamel, reverse, toASCII };
 
