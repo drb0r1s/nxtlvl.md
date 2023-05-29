@@ -14,6 +14,8 @@ const defaultStyleRules = {
     "nxtlvl.h3": { marginBottom: "15px" },
     "nxtlvl.h4": { marginBottom: "10px" },
     "nxtlvl.h5": { marginBottom: "5px" },
+
+    "nxtlvl.pre.@": { fontFamily: "monospace" },
     
     "nxtlvl.classic.span.%": { whiteSpace: "break-spaces" },
     

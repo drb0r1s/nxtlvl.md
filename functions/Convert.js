@@ -1,4 +1,6 @@
 import ASCII from "../data/ASCII.js";
+import Escape from "./Escape.js";
+import escapeRegex from "./escapeRegex.js";
 
 const Convert = { camelToKebab, kebabToCamel, reverse, toASCII };
 
@@ -39,12 +41,33 @@ function reverse(string) {
 }
 
 function toASCII(string) {
-    const characters = [...string];
-    let asciiString = "";
+    const ascii = {
+        row: 6,
+        string: ""
+    };
+    
+    const characters = {
+        string: [...string],
+        ascii: []
+    };
 
-    for(let i = 0; i < characters.length; i++) Object.keys(ASCII).forEach((key, index) => { if(key === characters[i]) asciiString += Object.values(ASCII)[index] });
+    for(let i = 0; i < characters.string.length; i++) Object.keys(ASCII).forEach((key, index) => { if(key === characters.string[i]) characters.ascii.push(Object.values(ASCII)[index]) });
 
-    return asciiString;
+    for(let i = 0; i < ascii.row; i++) {
+        for(let j = 0; j < characters.ascii.length; j++) {
+            const rows = characters.ascii[j].split("\n");
+            
+            rows.shift();
+            rows.pop();
+
+            const targetRow = rows[i];
+            ascii.string += Escape.nxtlvl(targetRow);
+        }
+
+        ascii.string += "\n";
+    }
+    
+    return ascii.string;
 }
 
 export default Convert;
