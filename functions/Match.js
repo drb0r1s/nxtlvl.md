@@ -1,4 +1,4 @@
-import escapeRegex from "./escapeRegex.js";
+import Escape from "./Escape.js";
 
 const Match = { all, closest };
 export default Match;
@@ -13,7 +13,7 @@ function all(content, match) {
 }
 
 function closest(content, match, originalMatchPosition) {
-    const matches = all(content, escapeRegex(match));
+    const matches = all(content, Escape.regex(match));
     let closestMatch = matches[0];
 
     if(matches.length > 1) for(let i = 1; i < matches.length; i++) {

@@ -1,6 +1,5 @@
 import ASCII from "../data/ASCII.js";
 import Escape from "./Escape.js";
-import escapeRegex from "./escapeRegex.js";
 
 const Convert = { camelToKebab, kebabToCamel, reverse, toASCII };
 

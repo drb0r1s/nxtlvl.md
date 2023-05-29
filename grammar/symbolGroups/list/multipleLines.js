@@ -1,8 +1,8 @@
 import Log from "../../../Log.js";
 import Syntax from "../../Syntax.js";
 import Match from "../../../functions/Match.js";
+import Escape from "../../../functions/Escape.js";
 import generateTags from "../../../functions/generateTags.js";
-import escapeRegex from "../../../functions/escapeRegex.js";
 import isLineEmpty from "../../../functions/isLineEmpty.js";
 import StartSpaces from "../../../functions/StartSpaces.js";
 
@@ -548,7 +548,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 let boundaries = [];
                 const specialSymbol = !isNaN(parseInt(list.isSpecial)) ? `${list.isSpecial}.` : list.isSpecial;
 
-                const innerSymbolsSearch = Match.all(list.content, `${escapeRegex("(" + specialSymbol)}<br>|${escapeRegex(specialSymbol + ")")}<br>`);
+                const innerSymbolsSearch = Match.all(list.content, `${Escape.regex("(" + specialSymbol)}<br>|${Escape.regex(specialSymbol + ")")}<br>`);
                 let i = 0;
                 
                 while(innerSymbolsSearch.length !== 0) {
