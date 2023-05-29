@@ -50,17 +50,24 @@ function toASCII(string) {
         ascii: []
     };
 
-    for(let i = 0; i < characters.string.length; i++) Object.keys(ASCII).forEach((key, index) => { if(key === characters.string[i]) characters.ascii.push(Object.values(ASCII)[index]) });
+    for(let i = 0; i < characters.string.length; i++) {
+        if(characters.string[i] === " ") characters.ascii.push("space");
+        else Object.keys(ASCII).forEach((key, index) => { if(key === characters.string[i]) characters.ascii.push(Object.values(ASCII)[index]) });
+    }
 
     for(let i = 0; i < ascii.row; i++) {
         for(let j = 0; j < characters.ascii.length; j++) {
-            const rows = characters.ascii[j].split("\n");
+            if(characters.ascii[j] === "space") ascii.string += "   ";
             
-            rows.shift();
-            rows.pop();
+            else {
+                const rows = characters.ascii[j].split("\n");
+            
+                rows.shift();
+                rows.pop();
 
-            const targetRow = rows[i];
-            ascii.string += Escape.nxtlvl(targetRow);
+                const targetRow = rows[i];
+                ascii.string += Escape.nxtlvl(targetRow);
+            }
         }
 
         ascii.string += "\n";
