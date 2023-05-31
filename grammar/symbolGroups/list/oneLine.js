@@ -1,4 +1,5 @@
 import Convert from "../../../functions/Convert.js";
+import StartSpaces from "../../../functions/StartSpaces.js";
 
 export default function oneLine({ content, symbol, matches, tags }) {
     let parsedContent = content;
@@ -11,7 +12,9 @@ export default function oneLine({ content, symbol, matches, tags }) {
         const defaultInnerContent = parsedContent.substring(realPositions.start, realPositions.end - brLength);
         let innerContent = defaultInnerContent;
         
-        const asciiCase = symbol.tag === "pre" ? Convert.toASCII(parsedContent.substring(realPositions.start + 2, realPositions.end - brLength)) : "";
+        const multipleLinesCase = checkMultipleLinesCase(parsedContent.substring(0, realPositions.start));
+        const asciiCase = symbol.tag === "pre" ? Convert.toASCII(parsedContent.substring(realPositions.start + 2, realPositions.end - brLength), multipleLinesCase) : "";
+
         if(asciiCase) innerContent = asciiCase;
 
         parsedContent = parsedContent.substring(0, realPositions.start) + tags.opened + innerContent + tags.closed + parsedContent.substring(realPositions.end);
@@ -22,6 +25,18 @@ export default function oneLine({ content, symbol, matches, tags }) {
     const removeMd = new RegExp(pattern, "gm");
 
     parsedContent = parsedContent.replace(removeMd, "");
+
+    function checkMultipleLinesCase(string) {
+        let multipleLinesCase = "";
+
+        const lines = string.split("\n");
+        const lastLine = lines[lines.length - 1];
+
+        for(let i = 0; i < lastLine.length; i++) if(lastLine[i] && lastLine[i] !== " ") multipleLinesCase = lastLine[i];
+        
+        if(multipleLinesCase) return multipleLinesCase === ">" ? ">" : "< ";
+        return false;
+    }
 
     return parsedContent;
 }

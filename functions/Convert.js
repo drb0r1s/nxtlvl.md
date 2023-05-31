@@ -39,7 +39,7 @@ function reverse(string) {
     return reversedString;
 }
 
-function toASCII(string) {
+function toASCII(string, multipleLinesCase) {    
     const ascii = {
         row: 6,
         string: ""
@@ -56,6 +56,8 @@ function toASCII(string) {
     }
 
     for(let i = 0; i < ascii.row; i++) {
+        if(multipleLinesCase && i !== 0) ascii.string += multipleLinesCase;
+        
         for(let j = 0; j < characters.ascii.length; j++) {
             if(characters.ascii[j] === "space") ascii.string += "   ";
             
