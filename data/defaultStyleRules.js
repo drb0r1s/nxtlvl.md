@@ -1,4 +1,8 @@
 const defaultStyleRules = {
+    "..": {
+        color: "green"
+    },
+    
     "nxtlvl.h1": {
         borderBottom: "1px solid #cccccc",
         marginBottom: "30px",

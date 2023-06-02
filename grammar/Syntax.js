@@ -1,3 +1,4 @@
+import Escape from "../functions/Escape.js";
 import Match from "../functions/Match.js";
 
 const Syntax = {
@@ -17,15 +18,15 @@ const Syntax = {
             { tag: "h2", md: "-" },
             // NXTLVL:
             { tag: "h3", md: "_" },
-            { tag: "h4", md: "\\+" },
-            { tag: "h5", md: "\\*" },
-            { tag: "h6", md: "\\." }
+            { tag: "h4", md: "+" },
+            { tag: "h5", md: "*" },
+            { tag: "h6", md: "." }
         ],
         
         classic: [
-            { tag: "b", md: "\\*\\*" },
+            { tag: "b", md: "**" },
             { tag: "b", md: "__" },
-            { tag: "i", md: "\\*" },
+            { tag: "i", md: "*" },
             { tag: "i", md: "_" },
             // NXTLVL:
             { tag: "span", md: "%" }
@@ -69,7 +70,7 @@ const Syntax = {
 
                 symbols.forEach(symbol => {
                     let parsedPattern = pattern;
-                    parsedPattern = parsedPattern.replace(/{md}/g, symbol.md);
+                    parsedPattern = parsedPattern.replace(/{md}/g, symbol.regex ? symbol.md : Escape.regex(symbol.md));
 
                     patterns.push(parsedPattern);
                 });

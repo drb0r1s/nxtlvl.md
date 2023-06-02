@@ -19,7 +19,8 @@ function nxtlvl(string) {
         ".": "&#46;",
         "%": "&#37;",
         ">": "&gt;",
-        "<": "&lt;"
+        "<": "&lt;",
+        " ": "&nbsp;"
     };
 
     Object.keys(markdown).forEach((key, index) => {

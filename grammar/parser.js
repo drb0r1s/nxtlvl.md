@@ -50,7 +50,7 @@ export default function parser(content) {
                         for(let i = 0; i < realInnerListMatches.length; i++) for(let j = 0; j < realInnerListMatches[i].length; j++) {
                             if(potentialInnerListMatch.content === realInnerListMatches[i][j]) block = true;
                         }
-
+                        
                         if(block) return;
 
                         const realPositions = { start: match.positions.start - addingDifference, end: match.positions.end - addingDifference };
