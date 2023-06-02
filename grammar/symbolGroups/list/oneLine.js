@@ -1,5 +1,4 @@
 import Convert from "../../../functions/Convert.js";
-import StartSpaces from "../../../functions/StartSpaces.js";
 
 export default function oneLine({ content, symbol, matches, tags }) {
     let parsedContent = content;
@@ -15,7 +14,7 @@ export default function oneLine({ content, symbol, matches, tags }) {
         const multipleLinesCase = checkMultipleLinesCase(parsedContent.substring(0, realPositions.start));
         const asciiCase = symbol.tag === "pre" ? Convert.toASCII(parsedContent.substring(realPositions.start + 2, realPositions.end - brLength), multipleLinesCase) : "";
 
-        if(asciiCase) innerContent = asciiCase;
+        if(asciiCase) innerContent = asciiCase.substring(0, asciiCase.length - 1);
 
         parsedContent = parsedContent.substring(0, realPositions.start) + tags.opened + innerContent + tags.closed + parsedContent.substring(realPositions.end);
         addingDifference += tags.opened.length + tags.closed.length - brLength + (asciiCase ? innerContent.length - defaultInnerContent.length : 0);

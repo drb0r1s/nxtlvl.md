@@ -480,10 +480,10 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
         function parseCollapsible() {
             doubleParsing.collapsible.forEach(collapsibleContent => {
-                const tags = generateTags(symbol, { tag: "summary", md: "<" });
+                const noMdContent = removeCollapsibleMd(collapsibleContent);
                 
-                const lines = removeCollapsibleMd(collapsibleContent.split("\n"));
-                lines[0] = `${tags.opened}${findStartingLine(lines)}${tags.closed}`;
+                const summaryContent = setSummary(noMdContent);
+                const lines = summaryContent.split("\n");
 
                 let newCollapsibleContent = "";
 
@@ -495,20 +495,42 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 parsedContent = parsedContent.replaceAll(collapsibleContent, newCollapsibleContent);
             });
 
-            function findStartingLine(lines) {
-                let result = "";
-                lines.forEach(line => { if(line && !result) result = line });
+            function setSummary(content) {
+                let result = content;
+                const tags = generateTags(symbol, { tag: "summary", md: "<" });
+
+                const asciiCaseRegex = { start: /^<pre class=".+>/g, end: "</pre>" };
+                const asciiCase = Match.all(content, asciiCaseRegex.start)[0];
+
+                if(asciiCase) {
+                    const positions = { start: asciiCase.positions.start, end: -1 };
+                    const asciiCaseEnd = Match.closest(content, asciiCaseRegex.end, positions.start);
+
+                    positions.end = asciiCaseEnd.positions.end;
+
+                    result = result.substring(0, positions.start) + tags.opened + result.substring(positions.start, positions.end) + tags.closed + result.substring(positions.end);
+                }
+
+                else {
+                    const firstBr = content.indexOf("<br>") + 4;
+                    result = tags.opened + result.substring(0, firstBr) + tags.closed + result.substring(firstBr);
+                }
 
                 return result;
             }
 
-            function removeCollapsibleMd(lines) {
+            function removeCollapsibleMd(content) {
+                let result = "";
+                
+                const lines = content.split("\n");
+                
                 const noMdLines = [];
                 const noMdRegex = /<\s+/
 
                 lines.forEach(line => noMdLines.push(line.replace(noMdRegex, "")));
-
-                return noMdLines;
+                noMdLines.forEach((line, index) => { if(line) result += `${line}${index === noMdLines.length - 1 ? "" : "\n"}` });
+                
+                return result;
             }
         }
         
