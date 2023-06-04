@@ -55,6 +55,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
     else {
         getPairs(matches);
+        console.log(matches)
+        //if(symbol.tag === "ol") pairs.classic.forEach(pair => console.log(parsedContent.substring(pair.start, pair.end)))
         formatPairs();
 
         addPairs();
@@ -808,12 +810,10 @@ export default function multipleLines({ content, symbol, matches, tags }) {
     }
 
     function removeMd(removeLastBrStatus) {
-        // ((?<=<blockquote.+\">)>(\\s*(?![0-9]+\\.|\\*|\\+|-)?)|^>(\\s*(?![0-9]+\\.|\\*|\\+|-))?)(?!(<br>|$))
-        
         const patterns = {
             fakeBlockquotes: "((?<=<blockquote.+\">)>|^>)(?=[\\s>]*<br>)",
             fakeDetails: "((?<=<details.+\">)<(?=\\s)|^<(?=\\s))(?=[\\s<]*<br>)",
-            classicMd: "((?<=<blockquote.+\">)>|^>)\\s*(?!(<br>|$))",
+            classicMd: "((?<=<blockquote.+\">)>(\\s*(?![0-9]+\\.\\s+|\\*|\\+|-)?)|^>(\\s*(?![0-9]+\\.\\s+|\\*|\\+|-))?)(?!(<br>|$))",
             nxtlvlMd: `\\(${symbol.md}\\s*<br>(?=<${symbol.tag}.+">)|(?<=<\\/${symbol.tag}>)${symbol.md}\\)\\s*<br>`
         };
     

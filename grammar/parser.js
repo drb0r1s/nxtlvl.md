@@ -18,7 +18,7 @@ export default function parser(content) {
         const regex = {
             firstLine: /^<br>\n/,
             whitespaces: /^(\s+|\t)/gm,
-            innerList: /(\s+|\t)(?=([0-9]+\.|\*|\+|-)\s+.+<br>).+/gm
+            innerList: /(>|\s+|\t)(?=([0-9]+\.|\*|\+|-)\s+.+<br>).+/gm
         };
 
         let potentialInnerListMatches = [];
@@ -107,6 +107,8 @@ export default function parser(content) {
                 if(childrenBlock.length > 0) realInnerListMatches.push(childrenBlock);
             });
 
+            console.log(realInnerListMatches)
+
             function parseMultipleLinesCase(current, next) {                
                 const defaultContent = { current: current.content, next: next.content };
                 let parsed = defaultContent;
@@ -128,7 +130,7 @@ export default function parser(content) {
             }
         }
 
-        function formatInnerMatches(matches) {            
+        function formatInnerMatches(matches) {
             const formattedMatches = [];
             
             matches.forEach(match => {
