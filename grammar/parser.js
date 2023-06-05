@@ -107,8 +107,6 @@ export default function parser(content) {
                 if(childrenBlock.length > 0) realInnerListMatches.push(childrenBlock);
             });
 
-            console.log(realInnerListMatches)
-
             function parseMultipleLinesCase(current, next) {                
                 const defaultContent = { current: current.content, next: next.content };
                 let parsed = defaultContent;

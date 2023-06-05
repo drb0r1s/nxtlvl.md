@@ -55,7 +55,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
     else {
         getPairs(matches);
-        console.log(matches)
+        //console.log(matches)
         //if(symbol.tag === "ol") pairs.classic.forEach(pair => console.log(parsedContent.substring(pair.start, pair.end)))
         formatPairs();
 
@@ -813,7 +813,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         const patterns = {
             fakeBlockquotes: "((?<=<blockquote.+\">)>|^>)(?=[\\s>]*<br>)",
             fakeDetails: "((?<=<details.+\">)<(?=\\s)|^<(?=\\s))(?=[\\s<]*<br>)",
-            classicMd: "((?<=<blockquote.+\">)>(\\s*(?![0-9]+\\.\\s+|\\*|\\+|-)?)|^>(\\s*(?![0-9]+\\.\\s+|\\*|\\+|-))?)(?!(<br>|$))",
+            classicMd: "((?<=<blockquote.+\">)>(\\s*(?!\\s*[0-9]+\\.\\s+|\\s*\\*|\\s*\\+|\\s*-)?)|^>(\\s*(?!\\s*[0-9]+\\.\\s+|\\s*\\*|\\s*\\+|\\s*-))?)(?!(<br>|$))",
             nxtlvlMd: `\\(${symbol.md}\\s*<br>(?=<${symbol.tag}.+">)|(?<=<\\/${symbol.tag}>)${symbol.md}\\)\\s*<br>`
         };
     
@@ -823,6 +823,8 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             classicMd: new RegExp(patterns.classicMd, "gm"),
             nxtlvlMd: new RegExp(patterns.nxtlvlMd, "gm")
         };
+
+        if(symbol.tag === "blockquote") console.log(parsedContent)
         
         if(symbol.tag === "blockquote") parsedContent = parsedContent.replace(remove.fakeBlockquotes, "&gt;");
         if(symbol.tag === "details") parsedContent = parsedContent.replace(remove.fakeDetails, "&lt;");
