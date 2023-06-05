@@ -47,10 +47,7 @@ export default function parser(content) {
                         const potentialInnerListMatch = matches.potentialInnerList[index];
                         let block = false;
                         
-                        for(let i = 0; i < realInnerListMatches.length; i++) for(let j = 0; j < realInnerListMatches[i].length; j++) {
-                            if(potentialInnerListMatch.content === realInnerListMatches[i][j]) block = true;
-                        }
-                        
+                        for(let i = 0; i < realInnerListMatches.length; i++) for(let j = 0; j < realInnerListMatches[i].length; j++) if(potentialInnerListMatch.content === realInnerListMatches[i][j]) block = true;
                         if(block) return;
 
                         const realPositions = { start: match.positions.start - addingDifference, end: match.positions.end - addingDifference };
@@ -66,6 +63,10 @@ export default function parser(content) {
 
                     for(let i = 0; i < realInnerListMatches.length; i++) mergedRealInnerListMatches.push(...realInnerListMatches[i]);
                     for(let i = 0; i < mergedRealInnerListMatches.length; i++) parsedContent = parsedContent.replaceAll(mergedRealInnerListMatches[i], innerMatches[i]);
+
+                    const fakeInnerListRegex = /^>\s+(?=([0-9]+\.|\*|\+|-)\s+.+<br>).+<br>/gm;
+                    const potentialFakeInnerList = Match.all(parsedContent, fakeInnerListRegex);
+                    console.log(potentialFakeInnerList)
 
                     potentialInnerListMatches = [];
                     realInnerListMatches = [];

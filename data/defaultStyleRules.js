@@ -53,13 +53,17 @@ const defaultStyleRules = {
     "nxtlvl.multiple-lines.ol": {
         listStyleType: "decimal",
         listStylePosition: "inside",
-        margin: "5px 0px 5px 20px"
+        padding: "5px 0px 5px 20px"
     },
 
     "nxtlvl.multiple-lines.ul": {
         listStyleType: "revert",
         listStylePosition: "inside",
-        margin: "5px 0px 5px 20px"
+        padding: "5px 0px 5px 20px"
+    },
+
+    "nxtlvl.multiple-lines.inner-md": {
+        borderLeft: "1px solid #cccccc"
     }
 };
 

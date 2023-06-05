@@ -8,6 +8,7 @@ import StartSpaces from "../../../functions/StartSpaces.js";
 
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
+    if(symbol.tag === "ol") console.log(matches)
 
     const pairs = { classic: [], special: [], formatted: [] };
     let specialMd = [];
@@ -55,8 +56,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
     else {
         getPairs(matches);
-        //console.log(matches)
-        //if(symbol.tag === "ol") pairs.classic.forEach(pair => console.log(parsedContent.substring(pair.start, pair.end)))
         formatPairs();
 
         addPairs();
@@ -360,7 +359,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         if(symbol.tag === "details") parseCollapsible();
         if(symbol.tag === "ol" || symbol.tag === "ul") parseList();
 
-        function addPair(pair) {
+        function addPair(pair, isInner) {
             const { realPositions, innerContent, validTags, specialStatus } = initializePair();
             const parsedInnerContent = removeAllowedEmptyClassicMd();
             
@@ -381,7 +380,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             parsedContent = parsedContent.substring(0, realPositions.start) + validTags.opened + parsedInnerContent + parsedContent.substring(realPositions.end);
             addingDifference += validTags.opened.length - innerContentDifference;
 
-            if(pair.inner) pair.inner.forEach(innerPair => addPair(innerPair));
+            if(pair.inner) pair.inner.forEach(innerPair => addPair(innerPair, true));
 
             parsedContent = parsedContent.substring(0, pair.end + addingDifference) + validTags.closed + parsedContent.substring(pair.end + addingDifference);
             addingDifference += validTags.closed.length;
@@ -440,7 +439,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                         if(parseInt(tagsMd) !== counter - 1) tagsMd = `${tagsMd}-${counter - 1}`;
                     }
         
-                    const listTags = generateTags(symbol, { md: tagsMd }, startValue);
+                    const listTags = generateTags(symbol, { md: tagsMd, custom: isInner ? "inner-md" : "" }, startValue);
                     return listTags;
                 }
             }
@@ -823,8 +822,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             classicMd: new RegExp(patterns.classicMd, "gm"),
             nxtlvlMd: new RegExp(patterns.nxtlvlMd, "gm")
         };
-
-        if(symbol.tag === "blockquote") console.log(parsedContent)
         
         if(symbol.tag === "blockquote") parsedContent = parsedContent.replace(remove.fakeBlockquotes, "&gt;");
         if(symbol.tag === "details") parsedContent = parsedContent.replace(remove.fakeDetails, "&lt;");
