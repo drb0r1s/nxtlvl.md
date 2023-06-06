@@ -438,8 +438,13 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         
                         if(parseInt(tagsMd) !== counter - 1) tagsMd = `${tagsMd}-${counter - 1}`;
                     }
+
+                    const innerListClasses = [];
+
+                    if(pair.inner) innerListClasses.push("has-inner-list");
+                    if(isInner) innerListClasses.push("inner-list");
         
-                    const listTags = generateTags(symbol, { md: tagsMd, custom: isInner ? "inner-md" : "" }, startValue);
+                    const listTags = generateTags(symbol, { md: tagsMd, custom: innerListClasses.length > 0 ? innerListClasses.join(" ") : "" }, startValue);
                     return listTags;
                 }
             }

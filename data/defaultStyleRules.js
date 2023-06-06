@@ -62,7 +62,7 @@ const defaultStyleRules = {
         padding: "5px 0px 5px 20px"
     },
 
-    "nxtlvl.multiple-lines.inner-md": {
+    "nxtlvl.multiple-lines.inner-list": {
         borderLeft: "1px solid #cccccc"
     }
 };
