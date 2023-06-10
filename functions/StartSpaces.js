@@ -6,7 +6,9 @@ function count(string) {
     let counter = 0;
 
     while(status) {
-        if(string[counter] === " " || string[counter] === ">") counter++;
+        if(counter === string.length - 1) status = false;
+
+        if(string[counter] === " ") counter++;
         else status = false;
     }
 

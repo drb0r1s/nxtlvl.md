@@ -8,7 +8,6 @@ import StartSpaces from "../../../functions/StartSpaces.js";
 
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
-    if(symbol.tag === "ol") console.log(matches)
 
     const pairs = { classic: [], special: [], formatted: [] };
     let specialMd = [];
@@ -305,7 +304,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             });
         }
 
-        function formatInnerPairTemplate(nextMatch, addNew) {            
+        function formatInnerPairTemplate(nextMatch, addNew) {  
             if(inner.pairTemplates.length === 0 || addNew) {
                 inner.pairTemplates.push(nextMatch.positions);
                 if(!addNew) return;
@@ -322,7 +321,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 if(prevLine < line) formatInnerPairTemplate(nextMatch, nextMatch.positions.start);
 
                 if(prevLine > line) {
-                    while(inner.starts.length !== line) inner.starts.pop();
+                    if(inner.starts.length > line) while(inner.starts.length !== line) inner.starts.pop();
                     appendPairs();
                 }
             }
@@ -518,7 +517,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 }
 
                 else {
-                    const firstBr = content.indexOf("<br>") + 4;
+                    const firstBr = content.indexOf("\n");
                     result = tags.opened + result.substring(0, firstBr) + tags.closed + result.substring(firstBr);
                 }
 
@@ -546,7 +545,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 else parseClassicList(list);
             });
 
-            function parseClassicList(list) {
+            function parseClassicList(list) {    
                 let newLiContent = "";
                 const topLiContent = [];
                     
