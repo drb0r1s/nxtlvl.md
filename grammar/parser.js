@@ -201,6 +201,9 @@ export default function parser(content) {
                     }
                 }
 
+                const noContent = parsedContent.substring(0, realPositions.start);
+                if(!noContent.trim()) return;
+
                 parsedContent = parsedContent.substring(0, realPositions.start) + multipleLinesCase + parsedContent.substring(realPositions.end);
                 removingDifference += realPositions.end - realPositions.start - multipleLinesCase.length;
             });

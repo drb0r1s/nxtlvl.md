@@ -314,6 +314,9 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             
             const prevLine = StartSpaces.count(parsedContent.substring(inner.pairTemplates[inner.pairTemplates.length - 1].start, inner.pairTemplates[inner.pairTemplates.length - 1].end));
             const line = StartSpaces.count(parsedContent.substring(nextMatch.positions.start, nextMatch.positions.end));
+
+            const prevLineString = parsedContent.substring(inner.pairTemplates[inner.pairTemplates.length - 1].start, inner.pairTemplates[inner.pairTemplates.length - 1].end);
+            const lineString = parsedContent.substring(nextMatch.positions.start, nextMatch.positions.end);
             
             if(prevLine === line) appendPairs();
             
@@ -321,16 +324,17 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 if(prevLine < line) formatInnerPairTemplate(nextMatch, nextMatch.positions.start);
 
                 if(prevLine > line) {
+                    console.log(prevLineString, "\nRED UNAZAD:\n", lineString)
                     if(inner.starts.length > line) while(inner.starts.length !== line) inner.starts.pop();
                     appendPairs();
                 }
             }
 
-            function updateInnerPairTemplate(start, value) {
+            function updateInnerPairTemplate(start, end) {
                 let newInnerPairTemplates = [];
 
                 for(let i = 0; i < inner.pairTemplates.length; i++) {
-                    if(start === inner.pairTemplates[i].start) newInnerPairTemplates.push({...inner.pairTemplates[i], ...value});
+                    if(start === inner.pairTemplates[i].start) newInnerPairTemplates.push({...inner.pairTemplates[i], end});
                     else newInnerPairTemplates.push(inner.pairTemplates[i]);
                 }
 
@@ -338,7 +342,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             }
 
             function appendPairs() {
-                inner.starts.forEach(start => updateInnerPairTemplate(start, { end: nextMatch.positions.end }));
+                inner.starts.forEach(start => updateInnerPairTemplate(start, nextMatch.positions.end));
             }
         }
 
@@ -361,6 +365,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
         function addPair(pair, isInner) {
             const { realPositions, innerContent, validTags, specialStatus } = initializePair();
             const parsedInnerContent = removeAllowedEmptyClassicMd();
+
             
             if(symbol.tag === "details") {
                 let exists = false;
@@ -716,7 +721,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             }
         }
     }
-
+    
     function formatPairs() {
         pairs.formatted = [...pairs.classic, ...pairs.special];
         let swap;
@@ -762,10 +767,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
         function checkBlocked(pair) {
             let result = false;
-            
-            blocked.forEach(block => {
-                if(pair.start === block.start && pair.end === block.end) result = true;
-            });
+            blocked.forEach(block => { if(pair.start === block.start && pair.end === block.end) result = true });
 
             return result;
         }
