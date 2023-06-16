@@ -33,18 +33,22 @@ export default function parser(content) {
 
                     const innerLists = getInnerLists(potentialinnerLists);
                     const formattedInnerLists = formatInnerLists(innerLists);
-            
+                    
                     removeFakeinnerLists(potentialinnerLists, formattedInnerLists);
+                    
+                    //formattedInnerLists.forEach(list => console.log(list.content, StartSpaces.count(list.content)))
 
                     const mergedInnerLists = [];
 
                     for(let i = 0; i < innerLists.length; i++) for(let j = 0; j < innerLists[i].length; j++) mergedInnerLists.push(innerLists[i][j].content);
                     for(let i = 0; i < mergedInnerLists.length; i++) parsedContent = parsedContent.replaceAll(mergedInnerLists[i], formattedInnerLists[i].content);
+
+                    console.log(parsedContent)
                     
                     break;
                 case "whitespaces":
                     const matches = Match.all(parsedContent, r);
-                    const listRegex = /^\s+([0-9]+\.|\*|\+|-)\s/
+                    const listRegex = /^\s+([0-9]+\.|\*|\+|-)\s/;
 
                     let removingDifference = 0;
                     
@@ -111,10 +115,11 @@ export default function parser(content) {
 
                     for(let i = 0; i < value.length; i++) if(multipleLinesCase) {
                         if(value[i] === ">" || (value[i] === "<" && value[i + 1] === " ")) symbolsStatus = true;
-                        else if(!symbolsStatus && value [i] !== "" && value[i] === ">" && value[i] === "<") multipleLinesCase = false;
+                        else if(!symbolsStatus && value [i] !== " " && value[i] !== ">" && value[i] !== "<") multipleLinesCase = false;
                     }
 
                     if(!multipleLinesCase) return;
+                    console.log(current, next)
 
                     let realStart = 0;
                     let status = true;
@@ -201,8 +206,8 @@ export default function parser(content) {
                     }
                 }
 
-                const noContent = parsedContent.substring(0, realPositions.start);
-                if(!noContent.trim()) return;
+                const hasContent = parsedContent.substring(realPositions.start, realPositions.end).trim();
+                if(hasContent) return;                
 
                 parsedContent = parsedContent.substring(0, realPositions.start) + multipleLinesCase + parsedContent.substring(realPositions.end);
                 removingDifference += realPositions.end - realPositions.start - multipleLinesCase.length;

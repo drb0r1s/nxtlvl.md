@@ -8,6 +8,7 @@ import StartSpaces from "../../../functions/StartSpaces.js";
 
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
+    if(symbol.tag === "ol") console.log(matches)
 
     const pairs = { classic: [], special: [], formatted: [] };
     let specialMd = [];
@@ -324,7 +325,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 if(prevLine < line) formatInnerPairTemplate(nextMatch, nextMatch.positions.start);
 
                 if(prevLine > line) {
-                    console.log(prevLineString, "\nRED UNAZAD:\n", lineString)
+                    //console.log(prevLineString, "\nRED UNAZAD:\n", lineString)
                     if(inner.starts.length > line) while(inner.starts.length !== line) inner.starts.pop();
                     appendPairs();
                 }
