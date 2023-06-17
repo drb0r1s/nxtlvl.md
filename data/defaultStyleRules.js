@@ -40,13 +40,13 @@ const defaultStyleRules = {
             cursor: "pointer",
             userSelect: "none",
 
-            "nxtlvl.h1, nxtlvl.h2, nxtlvl.h3, nxtlvl.h4, nxtlvl.h5, nxtlvl.h6": { display: "inline-block" },
-            
-            "nxtlvl.h1, nxtlvl.h2": {
-                borderBottom: "none",
+            "nxtlvl.h1, nxtlvl.h2, nxtlvl.h3, nxtlvl.h4, nxtlvl.h5, nxtlvl.h6": {
+                display: "inline-block",
                 marginBottom: "0",
                 paddingBottom: "0"
-            }
+            },
+            
+            "nxtlvl.h1, nxtlvl.h2": { borderBottom: "none" }
         },
     },
 

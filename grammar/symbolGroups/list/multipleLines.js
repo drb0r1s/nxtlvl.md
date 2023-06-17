@@ -8,7 +8,6 @@ import StartSpaces from "../../../functions/StartSpaces.js";
 
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
-    if(symbol.tag === "ol") console.log(matches)
 
     const pairs = { classic: [], special: [], formatted: [] };
     let specialMd = [];
@@ -315,9 +314,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             
             const prevLine = StartSpaces.count(parsedContent.substring(inner.pairTemplates[inner.pairTemplates.length - 1].start, inner.pairTemplates[inner.pairTemplates.length - 1].end));
             const line = StartSpaces.count(parsedContent.substring(nextMatch.positions.start, nextMatch.positions.end));
-
-            const prevLineString = parsedContent.substring(inner.pairTemplates[inner.pairTemplates.length - 1].start, inner.pairTemplates[inner.pairTemplates.length - 1].end);
-            const lineString = parsedContent.substring(nextMatch.positions.start, nextMatch.positions.end);
             
             if(prevLine === line) appendPairs();
             
@@ -325,7 +321,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 if(prevLine < line) formatInnerPairTemplate(nextMatch, nextMatch.positions.start);
 
                 if(prevLine > line) {
-                    //console.log(prevLineString, "\nRED UNAZAD:\n", lineString)
                     if(inner.starts.length > line) while(inner.starts.length !== line) inner.starts.pop();
                     appendPairs();
                 }
@@ -536,7 +531,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 const lines = content.split("\n");
                 
                 const noMdLines = [];
-                const noMdRegex = /<\s+/
+                const noMdRegex = /<(\s*(?!\s*[0-9]+\.\s+|\s*\*|\s*\+|\s*-))?/;
 
                 lines.forEach(line => noMdLines.push(line.replace(noMdRegex, "")));
                 noMdLines.forEach((line, index) => { if(line) result += `${line}${index === noMdLines.length - 1 ? "" : "\n"}` });
@@ -693,6 +688,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                     });
 
                     const liMatch = Match.closest(parsedContent, row, list.positions.start);
+                    console.log(row)
                     parsedContent = parsedContent.substring(0, liMatch.positions.start) + parsedLiContent + parsedContent.substring(liMatch.positions.end);
 
                     parsedLiContent = "";

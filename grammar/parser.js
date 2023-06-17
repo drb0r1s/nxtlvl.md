@@ -17,7 +17,7 @@ export default function parser(content) {
 
         const regex = {
             firstLine: /^<br>\n/,
-            innerList: /^\s*>?\s*(?=([0-9]+\.|\*|\+|-)\s+.+<br>).+/gm,
+            innerList: /^\s*(>|<\s)?\s*(?=([0-9]+\.|\*|\+|-)\s+.+<br>).+/gm,
             whitespaces: /^\s+.+/gm
         };
 
@@ -35,15 +35,11 @@ export default function parser(content) {
                     const formattedInnerLists = formatInnerLists(innerLists);
                     
                     removeFakeinnerLists(potentialinnerLists, formattedInnerLists);
-                    
-                    //formattedInnerLists.forEach(list => console.log(list.content, StartSpaces.count(list.content)))
 
                     const mergedInnerLists = [];
 
                     for(let i = 0; i < innerLists.length; i++) for(let j = 0; j < innerLists[i].length; j++) mergedInnerLists.push(innerLists[i][j].content);
                     for(let i = 0; i < mergedInnerLists.length; i++) parsedContent = parsedContent.replaceAll(mergedInnerLists[i], formattedInnerLists[i].content);
-
-                    console.log(parsedContent)
                     
                     break;
                 case "whitespaces":
@@ -119,7 +115,6 @@ export default function parser(content) {
                     }
 
                     if(!multipleLinesCase) return;
-                    console.log(current, next)
 
                     let realStart = 0;
                     let status = true;
