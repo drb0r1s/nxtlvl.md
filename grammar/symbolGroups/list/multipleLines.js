@@ -531,7 +531,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                 const lines = content.split("\n");
                 
                 const noMdLines = [];
-                const noMdRegex = /<(\s*(?!\s*[0-9]+\.\s+|\s*\*|\s*\+|\s*-))?/;
+                const noMdRegex = /<\s(\s*(?!\s*[0-9]+\.\s+|\s*\*|\s*\+|\s*-))?/;
 
                 lines.forEach(line => noMdLines.push(line.replace(noMdRegex, "")));
                 noMdLines.forEach((line, index) => { if(line) result += `${line}${index === noMdLines.length - 1 ? "" : "\n"}` });

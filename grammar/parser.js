@@ -17,7 +17,7 @@ export default function parser(content) {
 
         const regex = {
             firstLine: /^<br>\n/,
-            innerList: /^\s*(>|<\s)?\s*(?=([0-9]+\.|\*|\+|-)\s+.+<br>).+/gm,
+            innerList: /^\s*(>|<\s)?\s*(?=(\s*[0-9]+\.|\s*\*|\s*\+|\s*-)\s+.+<br>).+/gm,
             whitespaces: /^\s+.+/gm
         };
 
@@ -182,12 +182,13 @@ export default function parser(content) {
                 for(let i = 0; i < list.content.length; i++) if(startPosition === -1 && list.content[i] !== " ") startPosition = i;
 
                 const content = list.content.substring(startPosition);
+                console.log(content, startPosition)
                 let multipleLinesCase = "";
 
                 if(content[0] !== ">" && (content[0] !== "<" && content[0] !== " ")) realPositions.end = startPosition + realPositions.start;
                 
                 else {
-                    realPositions.start = startPosition;
+                    realPositions.start += startPosition;
                     
                     for(let i = 0; i < content.length; i++) {
                         if(realPositions.end === -1 && (content[i] === ">" || (content[i] === "<" && content[i + 1] === " "))) multipleLinesCase = content[i];
@@ -199,10 +200,9 @@ export default function parser(content) {
                             (content[i] !== "<" && content[i + 1] !== " ")
                         ) realPositions.end = i + realPositions.start;
                     }
-                }
 
-                const hasContent = parsedContent.substring(realPositions.start, realPositions.end).trim();
-                if(hasContent) return;                
+                    if(multipleLinesCase === "<") multipleLinesCase = "< ";
+                }
 
                 parsedContent = parsedContent.substring(0, realPositions.start) + multipleLinesCase + parsedContent.substring(realPositions.end);
                 removingDifference += realPositions.end - realPositions.start - multipleLinesCase.length;
