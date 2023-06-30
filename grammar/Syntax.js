@@ -44,7 +44,7 @@ const Syntax = {
 
     patterns: {
         oneLine: "((?<=^([<>\\s]+)?(>\\s*|<\\s+)){md}|^{md})(?!\\s*(<br>|$))\\s+.+(<br>|$)",
-        multipleLines: "((?<=^<(blockquote|details|summary|ol|ul).+\">){md}|^{md}).+|^\\({md}<br>|^{md}\\)<br>",
+        multipleLines: "((?<=^<(blockquote|details|summary|ol|ul).+\">){md}|(?<=^[<>\\s]*){md}).+|^\\({md}<br>|^{md}\\)<br>",
         upperLine: "[^<>\\s].+<br>(?=\\n(^(>\\s*|<\\s+)|^){md}+(<br>|$))",
         classic: "(?<!<(b|i)\\sclass=\"nxtlvl\\sclassic\\s(b|i)\\s)({md}(?=.+{md})(?!\\s*{md}))(?!\">)|(?<!<(b|i)\\sclass=\"nxtlvl\\sclassic\\s(b|i)\\s)((?<={md}.+)(?<!{md}\\s*){md})(?!\">)",
         

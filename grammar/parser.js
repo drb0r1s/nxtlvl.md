@@ -182,7 +182,6 @@ export default function parser(content) {
                 for(let i = 0; i < list.content.length; i++) if(startPosition === -1 && list.content[i] !== " ") startPosition = i;
 
                 const content = list.content.substring(startPosition);
-                console.log(content, startPosition)
                 let multipleLinesCase = "";
 
                 if(content[0] !== ">" && (content[0] !== "<" && content[0] !== " ")) realPositions.end = startPosition + realPositions.start;
@@ -203,6 +202,8 @@ export default function parser(content) {
 
                     if(multipleLinesCase === "<") multipleLinesCase = "< ";
                 }
+
+                console.log(parsedContent.substring(realPositions.start, realPositions.end))
 
                 parsedContent = parsedContent.substring(0, realPositions.start) + multipleLinesCase + parsedContent.substring(realPositions.end);
                 removingDifference += realPositions.end - realPositions.start - multipleLinesCase.length;

@@ -8,6 +8,7 @@ import StartSpaces from "../../../functions/StartSpaces.js";
 
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
+    //if(symbol.tag === "details") console.log(parsedContent)
 
     const pairs = { classic: [], special: [], formatted: [] };
     let specialMd = [];
@@ -362,7 +363,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
             const { realPositions, innerContent, validTags, specialStatus } = initializePair();
             const parsedInnerContent = removeAllowedEmptyClassicMd();
 
-            
             if(symbol.tag === "details") {
                 let exists = false;
                 if(doubleParsing.collapsible.indexOf(parsedInnerContent) > -1) exists = true;
@@ -688,7 +688,6 @@ export default function multipleLines({ content, symbol, matches, tags }) {
                     });
 
                     const liMatch = Match.closest(parsedContent, row, list.positions.start);
-                    console.log(row)
                     parsedContent = parsedContent.substring(0, liMatch.positions.start) + parsedLiContent + parsedContent.substring(liMatch.positions.end);
 
                     parsedLiContent = "";
@@ -844,10 +843,10 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
                 lastBrTags.forEach(lastBrTag => {
                     const realPosition = lastBrTag.positions.start - removingDifference;
-                    const brLength = 4;
+                    const additional = { brTag: 4, newLine: lastBrTag.content.includes("\n") ? 1 : 0 };
 
-                    parsedContent = parsedContent.substring(0, realPosition) + parsedContent.substring(realPosition + brLength);
-                    removingDifference += brLength;
+                    parsedContent = parsedContent.substring(0, realPosition) + parsedContent.substring(realPosition + additional.brTag + additional.newLine);
+                    removingDifference += additional.brTag + additional.newLine;
                 });
             });
         }
