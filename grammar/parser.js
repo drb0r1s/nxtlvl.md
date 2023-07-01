@@ -196,14 +196,12 @@ export default function parser(content) {
                             realPositions.end === -1 &&
                             content[i] !== " " &&
                             content[i] !== ">" &&
-                            (content[i] !== "<" && content[i + 1] !== " ")
+                            content[i] !== "<"
                         ) realPositions.end = i + realPositions.start;
                     }
 
                     if(multipleLinesCase === "<") multipleLinesCase = "< ";
                 }
-
-                console.log(parsedContent.substring(realPositions.start, realPositions.end))
 
                 parsedContent = parsedContent.substring(0, realPositions.start) + multipleLinesCase + parsedContent.substring(realPositions.end);
                 removingDifference += realPositions.end - realPositions.start - multipleLinesCase.length;

@@ -8,7 +8,6 @@ import StartSpaces from "../../../functions/StartSpaces.js";
 
 export default function multipleLines({ content, symbol, matches, tags }) {
     let parsedContent = content;
-    //if(symbol.tag === "details") console.log(parsedContent)
 
     const pairs = { classic: [], special: [], formatted: [] };
     let specialMd = [];
@@ -382,8 +381,10 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
             if(pair.inner) pair.inner.forEach(innerPair => addPair(innerPair, true));
 
-            parsedContent = parsedContent.substring(0, pair.end + addingDifference) + validTags.closed + parsedContent.substring(pair.end + addingDifference);
-            addingDifference += validTags.closed.length;
+            const divider = symbol.tag === "blockquote" ? "\n" : "";
+
+            parsedContent = parsedContent.substring(0, pair.end + addingDifference) + validTags.closed + divider + parsedContent.substring(pair.end + addingDifference);
+            addingDifference += validTags.closed.length + divider.length;
         
             function initializePair() {                
                 const specialStatus = isPairSpecial(parsedContent.substring(pair.start + addingDifference));
@@ -843,7 +844,7 @@ export default function multipleLines({ content, symbol, matches, tags }) {
 
                 lastBrTags.forEach(lastBrTag => {
                     const realPosition = lastBrTag.positions.start - removingDifference;
-                    const additional = { brTag: 4, newLine: lastBrTag.content.includes("\n") ? 1 : 0 };
+                    const additional = { brTag: 4, newLine: target === "blockquote" ? lastBrTag.content.includes("\n") ? 1 : 0 : 0 };
 
                     parsedContent = parsedContent.substring(0, realPosition) + parsedContent.substring(realPosition + additional.brTag + additional.newLine);
                     removingDifference += additional.brTag + additional.newLine;
