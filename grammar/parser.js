@@ -33,14 +33,9 @@ export default function parser(content) {
 
                     const innerLists = getInnerLists(potentialinnerLists);
                     const formattedInnerLists = formatInnerLists(innerLists);
-                    
-                    removeFakeinnerLists(potentialinnerLists, formattedInnerLists);
 
-                    const mergedInnerLists = [];
+                    removeListSpaces(potentialinnerLists, formattedInnerLists);
 
-                    for(let i = 0; i < innerLists.length; i++) for(let j = 0; j < innerLists[i].length; j++) mergedInnerLists.push(innerLists[i][j].content);
-                    for(let i = 0; i < mergedInnerLists.length; i++) parsedContent = parsedContent.replaceAll(mergedInnerLists[i], formattedInnerLists[i].content);
-                    
                     break;
                 case "whitespaces":
                     const matches = Match.all(parsedContent, r);
@@ -156,56 +151,78 @@ export default function parser(content) {
 
                     for(let i = 0; i < level; i++) formattedLine += " ";
                     formattedLine += noSpacesLine;
+
+                    const fullLine = getFullLine(line);
                     
-                    formattedLists.push({ content: formattedLine, position: line.position });
+                    formattedLists.push({
+                        content: fullLine,
+                        formatted: formattedLine,
+                        positions: { start: line.position, end: line.position + fullLine.length }
+                    });
                 });
             });
 
             return formattedLists;
+
+            function getFullLine(line) {
+                const afterLine = parsedContent.substring(line.position);
+                const firstBr = afterLine.indexOf("<br>");
+
+                const fullLine = afterLine.substring(0, firstBr + 4);
+                return fullLine;
+            }
         }
 
-        function removeFakeinnerLists(potentialFakeinnerLists, formattedInnerLists) {
-            const fakeinnerLists = [];
-            let removingDifference = 0;
-            
-            potentialFakeinnerLists.forEach(list => {
-                let exists = false;
-                formattedInnerLists.forEach(formattedList => { if(list.positions.start === formattedList.position) exists = true });
+        function removeListSpaces(potentialInnerLists, formattedInnerLists) {
+            const lists = { unformatted: [], formatted: formattedInnerLists };
 
-                if(!exists) fakeinnerLists.push(list);
+            for(let i = 0; i < potentialInnerLists.length; i++) {
+                let isFormatted = false;
+                for(let j = 0; j < formattedInnerLists.length; j++) if(potentialInnerLists[i].positions.start === formattedInnerLists[j].positions.start) isFormatted = true;
+
+                if(!isFormatted) lists.unformatted.push(potentialInnerLists[i]);
+            }
+
+            const mergedLists = [...lists.unformatted, ...lists.formatted];
+
+            let swap;
+
+            for(let i = 0; i < mergedLists.length; i++) for(let j = i + 1; j < mergedLists.length; j++) if(mergedLists[i].positions.start > mergedLists[j].positions.start) {
+                swap = mergedLists[i];
+                mergedLists[i] = mergedLists[j];
+                mergedLists[j] = swap;
+            }
+
+            let removingDifference = 0;
+
+            mergedLists.forEach(list => {
+                const realPositions = { start: list.positions.start - removingDifference, end: list.positions.end - removingDifference };
+                
+                const prefixRegex = /^[<>\s]+/;
+                const prefix = getPrefix(list.content);
+
+                const newContent = prefix + (list.formatted ? list.formatted : list.content.replace(prefixRegex, ""));
+                const difference = Math.abs(list.content.length - newContent.length);
+
+                parsedContent = parsedContent.substring(0, realPositions.start) + newContent + parsedContent.substring(realPositions.end);
+                removingDifference += difference;
             });
 
-            fakeinnerLists.forEach(list => {
-                const realPositions = { start: list.positions.start - removingDifference, end: -1 };
+            function getPrefix(content) {
+                let prefixSymbols = "";
+                let stop = false;
 
-                let startPosition = -1;
-                for(let i = 0; i < list.content.length; i++) if(startPosition === -1 && list.content[i] !== " ") startPosition = i;
+                for(let i = 0; i < content.length; i++) {
+                    if(
+                        (content[i] !== " " && content[i] !== ">" && content[i] !== "<") ||
+                        (content[i] === "<" && content[i + 1] !== " ")
+                    ) stop = true;
 
-                const content = list.content.substring(startPosition);
-                let multipleLinesCase = "";
-
-                if(content[0] !== ">" && (content[0] !== "<" && content[0] !== " ")) realPositions.end = startPosition + realPositions.start;
-                
-                else {
-                    realPositions.start += startPosition;
-                    
-                    for(let i = 0; i < content.length; i++) {
-                        if(realPositions.end === -1 && (content[i] === ">" || (content[i] === "<" && content[i + 1] === " "))) multipleLinesCase = content[i];
-                        
-                        if(
-                            realPositions.end === -1 &&
-                            content[i] !== " " &&
-                            content[i] !== ">" &&
-                            content[i] !== "<"
-                        ) realPositions.end = i + realPositions.start;
-                    }
-
-                    if(multipleLinesCase === "<") multipleLinesCase = "< ";
+                    if(!stop && (content[i] === ">" || content[i] === "<")) prefixSymbols += content[i] === ">" ? ">" : "< ";
                 }
 
-                parsedContent = parsedContent.substring(0, realPositions.start) + multipleLinesCase + parsedContent.substring(realPositions.end);
-                removingDifference += realPositions.end - realPositions.start - multipleLinesCase.length;
-            });
+                return prefixSymbols;
+            }
         }
     }
 }

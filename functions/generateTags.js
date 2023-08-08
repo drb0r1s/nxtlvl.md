@@ -23,7 +23,7 @@ export default function generateTags(symbol, editClasses, custom) {
         const classes = {...defaultClasses, ...editClasses};
         let classContent = "nxtlvl";
     
-        Object.values(classes).forEach(value => { classContent += ` ${value}` });
+        Object.values(classes).forEach(value => { if(value) classContent += ` ${value}` });
         attributes.class = classContent;
     }
 
