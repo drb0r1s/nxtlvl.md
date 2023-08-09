@@ -1,11 +1,11 @@
-import Parse from "./Parse.js";
-import Search from "./Search.js";
-import isSpecial from "./isSpecial.js";
-import formatInnerPairs from "./formatInnerPairs.js";
-import checkEmptyPairs from "./checkEmptyPairs.js";
-import addPairs from "./addPairs.js";
-import nest from "./nest.js";
-import getDoubleParsing from "./getDoubleParsing.js";
+import Parse from "./add/Parse.js";
+import Search from "./get/Search.js";
+import isSpecial from "../isSpecial.js";
+import formatInnerPairs from "./get/formatInnerPairs.js";
+import checkEmptyPairs from "./get/checkEmptyPairs.js";
+import nest from "./format/nest.js";
+import addPairs from "./add/addPairs.js";
+import getDoubleParsing from "./add/getDoubleParsing.js";
 
 export default function getPairFunctions({ content, symbol }) {
     return [get, format, add];

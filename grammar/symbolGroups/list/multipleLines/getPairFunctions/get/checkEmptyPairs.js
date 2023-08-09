@@ -1,5 +1,5 @@
-import Log from "../../../../Log.js";
-import isSpecial from "./isSpecial.js";
+import Log from "../../../../../../Log.js";
+import isSpecial from "../../isSpecial.js";
 
 export default function checkEmptyPairs(content, symbol, pairs) {
     const newPairs = {...pairs};

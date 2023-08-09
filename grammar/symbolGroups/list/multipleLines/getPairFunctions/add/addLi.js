@@ -1,6 +1,6 @@
-import Remove from "./Remove.js";
-import generateTags from "../../../../functions/generateTags.js";
-import isSpecial from "./isSpecial.js";
+import Remove from "../../Remove.js";
+import generateTags from "../../../../../../functions/generateTags.js";
+import isSpecial from "../../isSpecial.js";
 import getTagPositions from "./getTagPositions.js";
 
 export default function addLi(pairs, content, addingDifference, symbol) {

@@ -1,6 +1,6 @@
-import StartSpaces from "../../../../functions/StartSpaces.js";
-import isSpecial from "./isSpecial.js";
-import generateTags from "../../../../functions/generateTags.js";
+import StartSpaces from "../../../../../../functions/StartSpaces.js";
+import isSpecial from "../../isSpecial.js";
+import generateTags from "../../../../../../functions/generateTags.js";
 
 export default function getValidTags(content, symbol, pair, isInner) {
     const md = { default: "", range: "", custom: "" };

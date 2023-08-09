@@ -1,5 +1,5 @@
 import Syntax from "../../../Syntax.js";
-import getPairFunctions from "./getPairFunctions.js";
+import getPairFunctions from "./getPairFunctions/index.js";
 import Remove from "./Remove.js";
 
 export default function multipleLines({ content, symbol, matches }) {

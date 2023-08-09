@@ -1,4 +1,4 @@
-import Match from "../../../../functions/Match.js";
+import Match from "../../../../../../functions/Match.js";
 import getTagPositions from "./getTagPositions.js";
 
 export default function getDoubleParsing(content, symbol) {

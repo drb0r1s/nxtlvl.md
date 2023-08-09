@@ -1,7 +1,7 @@
-import Remove from "./Remove.js";
-import generateTags from "../../../../functions/generateTags.js";
+import Remove from "../../Remove.js";
+import generateTags from "../../../../../../functions/generateTags.js";
 import addLi from "./addLi.js";
-import nest from "./nest.js";
+import nest from "../format/nest.js";
 import getTagPositions from "./getTagPositions.js";
 
 const Parse = { collapsible, list };
