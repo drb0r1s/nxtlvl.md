@@ -17,7 +17,7 @@ export default function parser(content) {
 
         const regex = {
             firstLine: /^<br>\n/,
-            innerList: /^\s*(>|<\s)?\s*(?=(\s*[0-9]+\.|\s*\*|\s*\+|\s*-)\s+.+<br>).+/gm,
+            innerList: /^[<>\s]*\s*(?=(\s*[0-9]+\.|\s*\*|\s*\+|\s*-)\s+.+<br>).+/gm,
             whitespaces: /^\s+.+/gm
         };
 
@@ -30,6 +30,7 @@ export default function parser(content) {
                     break;
                 case "innerList":
                     const potentialinnerLists = Match.all(parsedContent, regex.innerList);
+                    console.log(potentialinnerLists)
 
                     const innerLists = getInnerLists(potentialinnerLists);
                     const formattedInnerLists = formatInnerLists(innerLists);
@@ -39,7 +40,7 @@ export default function parser(content) {
                     break;
                 case "whitespaces":
                     const matches = Match.all(parsedContent, r);
-                    const listRegex = /^\s+([0-9]+\.|\*|\+|-)\s/;
+                    const listRegex = /^[<>\s]*([0-9]+\.|\*|\+|-)\s/;
 
                     let removingDifference = 0;
                     
@@ -88,7 +89,7 @@ export default function parser(content) {
             matches.forEach(match => {
                 const childrenBlock = [];
                 
-                match.blocks.forEach(block => { if(match.spaces < StartSpaces.count(block.content)) childrenBlock.push(block); });
+                match.blocks.forEach(block => { if(match.spaces < StartSpaces.count(block.content)) childrenBlock.push(block) });
                 if(childrenBlock.length > 0) result.push(childrenBlock);
             });
 
