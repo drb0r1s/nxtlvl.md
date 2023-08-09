@@ -100,9 +100,9 @@ export default function addLi(pairs, content, addingDifference, symbol) {
 
         return newInnerContent;
 
-        function getLiMd(line, lastLine, olMainTag, specialStatus) {
+        function getLiMd(line, lastLine, olMainTag, specialSymbol) {
             let result = "";
-            if(specialStatus && isSpecial(line, symbol)) return;
+            if(specialSymbol && isSpecial(line, symbol)) return;
             
             if(symbol.tag === "ol") {                
                 const tagStatus = getTagStatus();
@@ -154,7 +154,7 @@ export default function addLi(pairs, content, addingDifference, symbol) {
             else {
                 if(line.match(regex)) return;
 
-                if(specialStatus) result = specialStatus;
+                if(specialSymbol) result = specialSymbol;
 
                 else {
                     const ulRegex = /[*+-]/;

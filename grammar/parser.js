@@ -30,7 +30,6 @@ export default function parser(content) {
                     break;
                 case "innerList":
                     const potentialinnerLists = Match.all(parsedContent, regex.innerList);
-                    console.log(potentialinnerLists)
 
                     const innerLists = getInnerLists(potentialinnerLists);
                     const formattedInnerLists = formatInnerLists(innerLists);
