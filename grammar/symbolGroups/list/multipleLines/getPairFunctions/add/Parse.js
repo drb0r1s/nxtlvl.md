@@ -28,10 +28,26 @@ function collapsible(pairs, content, symbol) {
         
         const lines = pairContent.split("\n");
         if(!lines[lines.length - 1]) lines.pop();
+        
+        const isList = { current: false, next: false };
+        const listRegex = /^\s*([0-9]+\.|[*+-])\s/;
 
         lines.forEach((line, index) => {
             const summaryContent = addSummary(line, index);
-            newPairContent += `${summaryContent}${index === lines.length - 1 ? "" : "\n"}`;
+            
+            if(index !== lines.length - 1) {
+                const summaryContentNext = addSummary(lines[index + 1], index + 1);
+                isList.next = summaryContentNext.match(listRegex);
+            }
+
+            isList.current = summaryContent.match(listRegex);
+
+            if(!isList.current && isList.next) isList.current = true;
+
+            const finalSummaryContent = isList.current ? summaryContent : summaryContent.trim();
+            const additionalContent = index === lines.length - 1 ? "" : "\n";
+
+            newPairContent += `${finalSummaryContent}${isList.current ? additionalContent : ""}`;
         });
 
         const pairContentDifference = Math.abs(pairContent.length - newPairContent.length);
