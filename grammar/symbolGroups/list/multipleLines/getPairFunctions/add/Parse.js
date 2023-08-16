@@ -4,10 +4,20 @@ import addLi from "./addLi.js";
 import nest from "../format/nest.js";
 import getTagPositions from "./getTagPositions.js";
 
-const Parse = { collapsible, list };
+const Parse = { blockquote, details, list };
 export default Parse;
 
-function collapsible(pairs, content, symbol) {
+function blockquote(pairs, content, symbol) {
+    let newContent = content;
+    
+    pairs.forEach(pair => {
+        console.log(newContent.substring(pair.start, pair.end))
+    })
+
+    return newContent;
+}
+
+function details(pairs, content, symbol) {
     let newContent = content;
     let addingDifference = 0;
     let asciiStatus = false;
@@ -48,6 +58,9 @@ function collapsible(pairs, content, symbol) {
             const additionalContent = index === lines.length - 1 ? "" : "\n";
 
             newPairContent += `${finalSummaryContent}${isList.current ? additionalContent : ""}`;
+
+            isList.current = false;
+            isList.next = false;
         });
 
         const pairContentDifference = Math.abs(pairContent.length - newPairContent.length);

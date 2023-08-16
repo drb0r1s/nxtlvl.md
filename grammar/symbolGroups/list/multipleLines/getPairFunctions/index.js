@@ -99,10 +99,16 @@ export default function getPairFunctions({ content, symbol }) {
         newContent = newContentValue;
         newAddingDifference = newAddingDifferenceValue;
 
+        const parseMethods = {...Parse};
+        let parseMethod;
+
         const doubleParsing = getDoubleParsing(newContent, symbol);
 
-        if(symbol.tag === "details") newContent = Parse.collapsible(doubleParsing, newContent, symbol);
-        if(symbol.tag === "ol" || symbol.tag === "ul") newContent = Parse.list(doubleParsing, newContent, symbol);
+        let parseMethodName = symbol.tag;
+        if(symbol.tag === "ol" || symbol.tag === "ul") parseMethodName = "list";
+
+        Object.keys(parseMethods).forEach((key, index) => { if(parseMethodName === key) parseMethod = Object.values(parseMethods)[index] });
+        newContent = parseMethod(doubleParsing, newContent, symbol);
 
         return { newPairs, newContent, newAddingDifference };
     }
