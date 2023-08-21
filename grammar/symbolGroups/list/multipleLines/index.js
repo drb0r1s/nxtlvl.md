@@ -20,11 +20,11 @@ export default function multipleLines({ content, symbol, matches }) {
             let currentMatches = matches;
             let i = 0;
 
-            while(currentMatches.length > 0) {
+            while(i < 2) {
                 resetPairs();
                 setPairs(pairs, currentMatches);
 
-                if(symbol.tag === "blockquote") parsedContent = Remove.md(parsedContent, symbol);
+                parsedContent = Remove.md(parsedContent, symbol, true);
                 if(!i) parsedContent = Remove.fakeMd(parsedContent, symbol);
 
                 i++;

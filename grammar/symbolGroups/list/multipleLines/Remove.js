@@ -1,7 +1,7 @@
 const Remove = { md, fakeMd, lastBr, details };
 export default Remove;
 
-function md(content, symbol) {
+function md(content, symbol, isSpecial) {
     let newContent = "";
     
     const lines = content.split("\n");
@@ -11,8 +11,8 @@ function md(content, symbol) {
     lines.forEach((line, index) => {
         let newLine = line;
 
-        newLine = newLine.replace(pattern, "");
-        newLine = newLine.replace(specialPattern, "");
+        if(!isSpecial) newLine = newLine.replace(pattern, "");
+        else newLine = newLine.replace(specialPattern, "");
 
         newContent += `${newLine}${index === lines.length - 1 ? "" : "\n"}`;
     });
