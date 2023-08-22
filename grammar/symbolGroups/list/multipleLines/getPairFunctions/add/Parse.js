@@ -1,41 +1,55 @@
-import Remove from "../../Remove.js";
-import generateTags from "../../../../../../functions/generateTags.js";
 import addLi from "./addLi.js";
 import nest from "../format/nest.js";
 import getTagPositions from "./getTagPositions.js";
 import spaceFix from "./spaceFix.js";
 
-const Parse = { blockquote, details, list };
+const Parse = { repeat, noRepeat };
 export default Parse;
 
-function blockquote(pairs, content, symbol) {
+function repeat(pairs, content, symbol) {
     let newContent = content;
-    let removingDifference = 0;
-    
-    pairs.forEach(pair => {
-        const realPositions = { start: pair.start - removingDifference, end: pair.end - removingDifference };
+    let contentDifference = 0;
 
-        const pairContent = newContent.substring(realPositions.start, realPositions.end);
+    pairs.forEach(pair => {
+        const realPositions = getRealPositions(pair);
+        
+        const pairContent = getPairContent(pair, realPositions);
         const spaceFixedContent = spaceFix(pairContent, symbol);
 
         const difference = Math.abs(pairContent.length - spaceFixedContent.length);
-        
+
+        if(summaryCheck(pairContent)) return;
+
         newContent = newContent.substring(0, realPositions.start) + spaceFixedContent + newContent.substring(realPositions.end);
-        removingDifference += difference;
+        contentDifference += difference;
     });
 
     return newContent;
-}
 
-function details(pairs, content, symbol) {
-    let newContent = content;
-    let addingDifference = 0;
-    let asciiStatus = false;
+    function getPairContent(pair, realPositions) {
+        const pairContent = symbol.tag === "blockquote" ? newContent.substring(realPositions.start, realPositions.end) : newContent.substring(pair.start, pair.end);
+        return pairContent;
+    }
 
-    pairs.forEach(pair => {
-        const pairContent = content.substring(pair.start, pair.end);
-        const spaceFixedContent = spaceFix(pairContent, symbol);
+    function getRealPositions(pair) {
+        const realPositions = pair;
 
+        if(symbol.tag === "blockquote") {
+            realPositions.start -= contentDifference;
+            realPositions.end -= contentDifference;
+        }
+
+        else {
+            realPositions.start += contentDifference;
+            realPositions.end += contentDifference;
+        }
+
+        return realPositions;
+    }
+
+    function summaryCheck(pairContent) {
+        let result = false;
+        
         const tagPositions = getTagPositions("summary", pairContent);
 
         if(tagPositions) {
@@ -43,20 +57,14 @@ function details(pairs, content, symbol) {
             const summaryEnd = afterTag.indexOf("</summary>");
 
             const afterTagSummaryContent = afterTag.substring(0, summaryEnd);
-            if(!afterTagSummaryContent.includes("< ")) return;
+            if(!afterTagSummaryContent.includes("< ")) result = true;
         }
 
-        const difference = Math.abs(pairContent.length - spaceFixedContent.length);
-        const realPositions = { start: pair.start + addingDifference, end: pair.end + addingDifference };
-
-        newContent = newContent.substring(0, realPositions.start) + spaceFixedContent + newContent.substring(realPositions.end);
-        addingDifference += difference;
-    });
-
-    return newContent;
+        return result;
+    }
 }
 
-function list(pairs, content, symbol) {
+function noRepeat(pairs, content, symbol) {
     let newContent = content;
     let addingDifference = 0;
 

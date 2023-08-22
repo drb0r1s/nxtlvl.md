@@ -100,15 +100,15 @@ export default function getPairFunctions({ content, symbol }) {
         newAddingDifference = newAddingDifferenceValue;
 
         const parseMethods = {...Parse};
-        let parseMethod;
+        const parseMethod = { name: "", function: null };
 
         const doubleParsing = getDoubleParsing(newContent, symbol);
 
-        let parseMethodName = symbol.tag;
-        if(symbol.tag === "ol" || symbol.tag === "ul") parseMethodName = "list";
+        if(symbol.tag === "blockquote" || symbol.tag === "details") parseMethod.name = "repeat";
+        if(symbol.tag === "ol" || symbol.tag === "ul") parseMethod.name = "noRepeat";
 
-        Object.keys(parseMethods).forEach((key, index) => { if(parseMethodName === key) parseMethod = Object.values(parseMethods)[index] });
-        newContent = parseMethod(doubleParsing, newContent, symbol);
+        Object.keys(parseMethods).forEach((key, index) => { if(parseMethod.name === key) parseMethod.function = Object.values(parseMethods)[index] });
+        newContent = parseMethod.function(doubleParsing, newContent, symbol);
 
         return { newPairs, newContent, newAddingDifference };
     }

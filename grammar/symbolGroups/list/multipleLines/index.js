@@ -11,7 +11,7 @@ export default function multipleLines({ content, symbol, matches }) {
     let addingDifference = 0;
 
     if(symbol.tag === "blockquote" || symbol.tag === "details") init("repeat");
-    else init("default");
+    else init("noRepeat");
 
     return parsedContent;
 
