@@ -20,7 +20,7 @@ export default function multipleLines({ content, symbol, matches }) {
             let currentMatches = matches;
             let i = 0;
 
-            while(i < 2) {
+            while(i < 3) {
                 resetPairs();
                 setPairs(pairs, currentMatches);
 
@@ -39,7 +39,7 @@ export default function multipleLines({ content, symbol, matches }) {
         else {
             setPairs(pairs, matches);
 
-            parsedContent = Remove.md(parsedContent, symbol);
+            parsedContent = Remove.md(parsedContent, symbol, true);
             parsedContent = Remove.lastBr(parsedContent);
         }
 
