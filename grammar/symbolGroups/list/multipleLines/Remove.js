@@ -4,18 +4,31 @@ export default Remove;
 function md(content, symbol, isSpecial) {
     let newContent = "";
     
-    const lines = content.split("\n");
+    if(isSpecial) {
+        const { specialPattern } = getPatterns();
 
-    const { pattern, specialPattern } = getPatterns();
+        const lines = content.split("\n");
+    
+        lines.forEach((line, index) => {
+            let newLine = line;
+            let status = false;
 
-    lines.forEach((line, index) => {
-        let newLine = line;
+            if(newLine.match(specialPattern)) status = true;
+            newLine = newLine.replace(specialPattern, "");
+    
+            newContent += `${newLine}${index === lines.length - 1 ? "" : "\n"}`;
+        });
+    }
 
-        if(!isSpecial) newLine = newLine.replace(pattern, "");
-        else newLine = newLine.replace(specialPattern, "");
+    else {
+        const { pattern } = getPatterns();
 
-        newContent += `${newLine}${index === lines.length - 1 ? "" : "\n"}`;
-    });
+        let newLine = content;
+
+        newLine = newLine.replace(pattern, "");
+
+        newContent += `${newLine}`;
+    }
 
     return newContent;
 

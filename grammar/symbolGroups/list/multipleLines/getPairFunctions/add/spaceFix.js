@@ -6,7 +6,8 @@ export default function spaceFix(pairContent, symbol) {
 
     const addNewLine = { current: false, next: false };
     
-    const newLinePattern = `^[<>\\s]*([0-9]+\\.|[*+-]|${symbol.tag === "blockquote" ? "<" : ""})\\s+(?!$)`;
+    const patternTarget = `([0-9]+\\.|[*+-]|<|>)\\s+(?!$)`;
+    const newLinePattern = "^[<>\\s]*" + patternTarget;
     const newLineRegex = new RegExp(newLinePattern);
 
     const lines = pairContent.split("\n");
@@ -58,7 +59,7 @@ export default function spaceFix(pairContent, symbol) {
             asciiStatus = false;
         }*/
     
-        summaryContent = !index ? `${tags.opened}${noMdLine}${tags.closed}` : noMdLine;        
+        summaryContent = !index ? `${tags.opened}${noMdLine}${tags.closed}` : noMdLine;
     
         return summaryContent;
     }

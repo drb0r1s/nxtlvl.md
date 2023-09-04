@@ -23,7 +23,7 @@ export default function multipleLines({ content, symbol, matches }) {
             while(i < 3) {
                 resetPairs();
                 setPairs(pairs, currentMatches);
-
+                
                 parsedContent = Remove.md(parsedContent, symbol, true);
                 if(!i) parsedContent = Remove.fakeMd(parsedContent, symbol);
 
@@ -67,6 +67,7 @@ export default function multipleLines({ content, symbol, matches }) {
             const [pattern] = multipleLines;
             
             const noSpecialMdPattern = pattern.split("|^\\(")[0];
+            //console.log(parsedContent)
             const matches = Syntax.match(parsedContent, symbol, noSpecialMdPattern);
 
             const newMatches = symbol.tag === "details" ? [] : matches;
