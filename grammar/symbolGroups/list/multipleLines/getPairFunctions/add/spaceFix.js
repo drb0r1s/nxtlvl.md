@@ -22,12 +22,15 @@ export default function spaceFix(pairContent, symbol) {
         }
 
         addNewLine.current = targetLine.match(newLineRegex) ? true : false;
-        const targetLineContent = addNewLine.current ? targetLine : targetLine.trim();
-
         if(!addNewLine.current && addNewLine.next) addNewLine.current = true;
-        const additionalContent = index === lines.length - 1 ? "" : "\n";
 
-        spaceFixedContent += `${targetLineContent}${addNewLine.current ? additionalContent : ""}`;
+        const targetLineContent = addNewLine.current ? targetLine : targetLine.trim();
+        
+        let newLineStatus = index !== lines.length - 1;
+        if(addNewLine.current && line.startsWith(">") && (index === lines.length - 1)) newLineStatus = true;
+
+        const newLine = newLineStatus ? "\n" : "";
+        spaceFixedContent += `${targetLineContent}${addNewLine.current ? newLine : ""}`;
 
         addNewLine.current = false;
         addNewLine.next = false;
