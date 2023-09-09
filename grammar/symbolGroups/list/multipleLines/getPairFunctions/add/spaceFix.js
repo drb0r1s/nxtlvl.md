@@ -22,9 +22,9 @@ export default function spaceFix(pairContent, symbol) {
         }
 
         addNewLine.current = targetLine.match(newLineRegex) ? true : false;
-        if(!addNewLine.current && addNewLine.next) addNewLine.current = true;
-
         const targetLineContent = addNewLine.current ? targetLine : targetLine.trim();
+
+        if(!addNewLine.current && addNewLine.next) addNewLine.current = true;
         
         let newLineStatus = index !== lines.length - 1;
         if(addNewLine.current && line.startsWith(">") && (index === lines.length - 1)) newLineStatus = true;

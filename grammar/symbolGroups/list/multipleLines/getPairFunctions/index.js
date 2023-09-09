@@ -1,3 +1,4 @@
+import Remove from "../Remove.js";
 import Parse from "./add/Parse.js";
 import Search from "./get/Search.js";
 import isSpecial from "../isSpecial.js";
@@ -15,7 +16,7 @@ export default function getPairFunctions({ content, symbol }) {
         const templates = { classic: {}, special: [] };
 
         matches.forEach((match, index) => {
-            if(isSpecial(match.md, symbol)) updateTemplates("special", Search.special(templates, match));
+            if(isSpecial(match.md)) updateTemplates("special", Search.special(templates, match));
             else updateTemplates("classic", Search.classic(templates, symbol, match, matches[index + 1]));
         });
 
@@ -88,7 +89,7 @@ export default function getPairFunctions({ content, symbol }) {
         return { newPairs };
     }
     
-    function add({ pairs, content, addingDifference }) {
+    function add({ pairs, content, addingDifference, repeated }) {
         const newPairs = pairs;
         
         let newContent = content;
@@ -98,6 +99,8 @@ export default function getPairFunctions({ content, symbol }) {
         
         newContent = newContentValue;
         newAddingDifference = newAddingDifferenceValue;
+
+        removeSpecialAndFake();
 
         const parseMethods = {...Parse};
         const parseMethod = { name: "", function: null };
@@ -111,5 +114,12 @@ export default function getPairFunctions({ content, symbol }) {
         newContent = parseMethod.function(doubleParsing, newContent, symbol);
 
         return { newPairs, newContent, newAddingDifference };
+
+        function removeSpecialAndFake() {
+            if(repeated) return;
+
+            newContent = Remove.md(newContent, symbol, true);
+            if(symbol.tag === "blockquote" || symbol.tag === "details") newContent = Remove.fakeMd(newContent, symbol);
+        }
     }
 }

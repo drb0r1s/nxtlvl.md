@@ -8,12 +8,12 @@ function md(content, symbol, isSpecial) {
         const { specialPattern } = getPatterns();
 
         const lines = content.split("\n");
+        if(!lines[lines.length - 1]) lines.pop();
     
         lines.forEach((line, index) => {
             let newLine = line;
-            let status = false;
 
-            if(newLine.match(specialPattern)) status = true;
+            if(!newLine.match(specialPattern)) return newContent += `${newLine}${index === lines.length - 1 ? "" : "\n"}`;
             newLine = newLine.replace(specialPattern, "");
     
             newContent += `${newLine}${index === lines.length - 1 ? "" : "\n"}`;
@@ -24,10 +24,9 @@ function md(content, symbol, isSpecial) {
         const { pattern } = getPatterns();
 
         let newLine = content;
-
         newLine = newLine.replace(pattern, "");
 
-        newContent += `${newLine}`;
+        newContent += newLine;
     }
 
     return newContent;

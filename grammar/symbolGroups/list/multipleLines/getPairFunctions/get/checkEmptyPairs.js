@@ -29,7 +29,7 @@ export default function checkEmptyPairs(content, symbol, pairs) {
                 filteredPairs = newPairs.special.filter(p => p.start !== pair.start && p.end !== pair.end);
                 newPairs.special = filteredPairs;
 
-                const specialSymbol = isSpecial(pairContent.split("\n")[0], symbol);
+                const specialSymbol = isSpecial(pairContent.split("\n")[0]);
                 Log.warn("EMPTY.SPECIAL_BLOCK", specialSymbol);
             }
         }

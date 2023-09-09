@@ -22,10 +22,7 @@ export default function multipleLines({ content, symbol, matches }) {
 
             while(i < 4) {
                 resetPairs();
-                setPairs(pairs, currentMatches);
-                
-                parsedContent = Remove.md(parsedContent, symbol, true);
-                if(!i) parsedContent = Remove.fakeMd(parsedContent, symbol);
+                setPairs(pairs, currentMatches, i > 0);
 
                 i++;
                 addingDifference = 0;
@@ -37,15 +34,13 @@ export default function multipleLines({ content, symbol, matches }) {
         }
 
         else {
-            setPairs(pairs, matches);
-
-            parsedContent = Remove.md(parsedContent, symbol, true);
+            setPairs(pairs, matches, false);
             parsedContent = Remove.lastBr(parsedContent);
         }
 
-        function setPairs(pairsCopy, matches) {
+        function setPairs(pairsCopy, matches, repeated) {
             pairFunctions.forEach(f => {
-                const { newPairs, newContent, newAddingDifference } = f({ pairs: pairsCopy, matches, content: parsedContent, addingDifference });
+                const { newPairs, newContent, newAddingDifference } = f({ pairs: pairsCopy, matches, content: parsedContent, addingDifference, repeated });
                 
                 pairs.classic = newPairs.classic;
                 pairs.special = newPairs.special;

@@ -77,6 +77,7 @@ export default function addLi(pairs, content, addingDifference, symbol) {
         let newInnerContent = "";
 
         const lines = innerContent.split("\n");
+        if(!lines[0]) lines.shift();
         if(!lines[lines.length - 1]) lines.pop();
 
         const pattern = `<${symbol.tag} class=\"nxtlvl multiple-lines.+\">|<\/${symbol.tag}>`;
@@ -87,12 +88,14 @@ export default function addLi(pairs, content, addingDifference, symbol) {
             if(line.match(regex)) liStatus = false;
 
             let tags;
-            const liNumber = getLiMd(line, index === lines.length - 1, olMainTag, isSpecial(innerContent, symbol));
+            const specialStatus = line.match(/\s*([0-9]+\.|[*+-])\s/) ? false : true;
+
+            const liNumber = getLiMd(line, index === lines.length - 1, olMainTag, specialStatus);
             
             if(liStatus) tags = generateTags(symbol, { tag: "li", md: liNumber });
 
             const noMdLine = Remove.md(line, symbol);
-            if(isSpecial(noMdLine, symbol)) return;
+            if(isSpecial(noMdLine)) return;
 
             const liContent = liStatus ? `${tags.opened}${noMdLine}${tags.closed}` : line;
             newInnerContent += `${liContent}${index === lines[lines.length - 1] ? "" : "\n"}`;
@@ -100,9 +103,8 @@ export default function addLi(pairs, content, addingDifference, symbol) {
 
         return newInnerContent;
 
-        function getLiMd(line, lastLine, olMainTag, specialSymbol) {
+        function getLiMd(line, lastLine, olMainTag, specialStatus) {
             let result = "";
-            if(specialSymbol && isSpecial(line, symbol)) return;
             
             if(symbol.tag === "ol") {                
                 const tagStatus = getTagStatus();
@@ -154,7 +156,7 @@ export default function addLi(pairs, content, addingDifference, symbol) {
             else {
                 if(line.match(regex)) return;
 
-                if(specialSymbol) result = specialSymbol;
+                if(specialStatus) result = specialStatus;
 
                 else {
                     const ulRegex = /[*+-]/;

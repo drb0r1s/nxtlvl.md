@@ -14,7 +14,7 @@ export default function getValidTags(content, symbol, pair, isInner) {
             break;
         case "ol":
         case "ul":
-            const specialSymbol = isSpecial(content, symbol);
+            const specialSymbol = isSpecial(content);
             
             if(specialSymbol) {
                 if(symbol.tag === "ol") md.default = specialSymbol.substring(0, specialSymbol.length - 1);
@@ -51,7 +51,7 @@ export default function getValidTags(content, symbol, pair, isInner) {
         const innerSpecial = [];
         
         lines.forEach((line, index) => {
-            const specialSymbol = isSpecial(line, symbol);
+            const specialSymbol = isSpecial(line);
             const specialSymbolType = line[0] === "(" ? "opened" : "closed";
             
             if(!index && specialSymbol) return;
