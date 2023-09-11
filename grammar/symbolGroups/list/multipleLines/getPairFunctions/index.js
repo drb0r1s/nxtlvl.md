@@ -100,7 +100,7 @@ export default function getPairFunctions({ content, symbol }) {
         newContent = newContentValue;
         newAddingDifference = newAddingDifferenceValue;
 
-        removeSpecialAndFake();
+        if(!repeated) newContent = Remove.md(newContent, symbol, true);
 
         const parseMethods = {...Parse};
         const parseMethod = { name: "", function: null };
@@ -113,13 +113,8 @@ export default function getPairFunctions({ content, symbol }) {
         Object.keys(parseMethods).forEach((key, index) => { if(parseMethod.name === key) parseMethod.function = Object.values(parseMethods)[index] });
         newContent = parseMethod.function(doubleParsing, newContent, symbol);
 
+        if(!repeated && (symbol.tag === "blockquote" || symbol.tag === "details")) newContent = Remove.fakeMd(newContent, symbol);
+
         return { newPairs, newContent, newAddingDifference };
-
-        function removeSpecialAndFake() {
-            if(repeated) return;
-
-            newContent = Remove.md(newContent, symbol, true);
-            if(symbol.tag === "blockquote" || symbol.tag === "details") newContent = Remove.fakeMd(newContent, symbol);
-        }
     }
 }

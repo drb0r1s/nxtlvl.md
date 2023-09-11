@@ -11,13 +11,18 @@ export default function getDoubleParsing(content, symbol) {
 
     matches.forEach((match, index) => {
         const type = match.content.includes("class") ? "opened" : "closed";
-        const positions = match.positions;
+        const { positions } = match;
         
-        if(symbol.tag === "details" && type === "opened") {
+        if((symbol.tag === "blockquote" || symbol.tag === "details") && type === "opened") {
             const tagPositions = getTagPositions(symbol.tag, match.content);
-            const detailsInSummary = isDetailsInSummary(tagPositions, match.content);
-            
-            if(!detailsInSummary) {
+            let status = true;
+
+            if(symbol.tag === "details") {
+                const detailsInSummary = isDetailsInSummary(tagPositions, match.content);
+                if(detailsInSummary) status = false;
+            }
+
+            if(status) {
                 const tag = match.content.substring(tagPositions.start, tagPositions.end);
 
                 const contentDifference = Math.abs(match.content.length - tag.length - 1);

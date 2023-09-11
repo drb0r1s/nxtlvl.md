@@ -20,9 +20,11 @@ export default function multipleLines({ content, symbol, matches }) {
             let currentMatches = matches;
             let i = 0;
 
-            while(i < 4) {
+            while(i < 10) {
                 resetPairs();
                 setPairs(pairs, currentMatches, i > 0);
+
+                //console.log(currentMatches)
 
                 i++;
                 addingDifference = 0;
