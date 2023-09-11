@@ -32,9 +32,10 @@ export default function getPairFunctions({ content, symbol }) {
 
         if(templates.special.length > 0) merge();
 
-        const { classic, special } = checkEmptyPairs(content, symbol, newPairs);
+        const { emptyPairs, newPairs: special } = checkEmptyPairs(content, newPairs.special);
+
+        emptyPairs.forEach(pair => console.log(content.substring(pair.start, pair.end)))
         
-        newPairs.classic = classic;
         newPairs.special = special;
 
         return { newPairs };
