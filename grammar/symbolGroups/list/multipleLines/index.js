@@ -6,7 +6,7 @@ export default function multipleLines({ content, symbol, matches }) {
     let parsedContent = content;
 
     const pairFunctions = getPairFunctions({ content: parsedContent, symbol });
-    const pairs = { classic: [], special: [], formatted: [] };
+    const pairs = { classic: [], special: [], empty: [], formatted: [] };
 
     let addingDifference = 0;
 
@@ -20,11 +20,9 @@ export default function multipleLines({ content, symbol, matches }) {
             let currentMatches = matches;
             let i = 0;
 
-            while(i < 10) {
+            while(currentMatches.length > 0) {
                 resetPairs();
                 setPairs(pairs, currentMatches, i > 0);
-
-                //console.log(currentMatches)
 
                 i++;
                 addingDifference = 0;
@@ -46,6 +44,7 @@ export default function multipleLines({ content, symbol, matches }) {
                 
                 pairs.classic = newPairs.classic;
                 pairs.special = newPairs.special;
+                pairs.empty = newPairs.empty;
                 pairs.formatted = newPairs.formatted;
 
                 if(newContent) parsedContent = newContent;
@@ -56,6 +55,7 @@ export default function multipleLines({ content, symbol, matches }) {
         function resetPairs() {
             pairs.classic = [];
             pairs.special = [];
+            pairs.empty = [];
             pairs.formatted = [];
         }
 

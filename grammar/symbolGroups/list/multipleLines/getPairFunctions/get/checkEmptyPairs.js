@@ -1,11 +1,10 @@
 import Log from "../../../../../../Log.js";
 import isSpecial from "../../isSpecial.js";
 
-export default function checkEmptyPairs(content, specialPairs) {
-    const emptyPairs = [];
-    let newPairs = specialPairs;
+export default function checkEmptyPairs(content, pairs) {
+    const newPairs = pairs;
     
-    newPairs.forEach(pair => {
+    newPairs.special.forEach(pair => {
         const pairContent = content.substring(pair.start, pair.end);
         
         const lines = pairContent.split("\n");
@@ -16,12 +15,24 @@ export default function checkEmptyPairs(content, specialPairs) {
 
         if(status) return;
         
-        emptyPairs.push(...newPairs.filter(p => p.start === pair.start && p.end === pair.end));
-        newPairs = newPairs.filter(p => p.start !== pair.start && p.end !== pair.end);
+        newPairs.empty.push(pair);
+        newPairs.special = newPairs.special.filter(p => p.start !== pair.start && p.end !== pair.end);
 
         const specialSymbol = isSpecial(pairContent.split("\n")[0]);
         Log.warn("EMPTY.SPECIAL_BLOCK", specialSymbol);
     });
 
-    return { emptyPairs, newPairs };
+    const updatedEmptyPairs = [];
+
+    newPairs.empty.forEach(pair => {
+        const afterEnd = content.substring(pair.end);
+        const regex = /(?<=\)\s*)<br>/;
+
+        const positionEnd = pair.end + afterEnd.match(regex).index + 4;
+        updatedEmptyPairs.push({...pair, end: positionEnd});
+    });
+
+    newPairs.empty = updatedEmptyPairs;
+
+    return newPairs;
 }
