@@ -1,4 +1,3 @@
-import Match from "../../../../../functions/Match.js";
 import Remove from "../Remove.js";
 import Parse from "./add/Parse.js";
 import Search from "./get/Search.js";
@@ -101,8 +100,10 @@ export default function getPairFunctions({ content, symbol }) {
         newContent = newContentValue;
         newAddingDifference = newAddingDifferenceValue;
 
-        if(symbol.tag === "blockquote" || symbol.tag === "details") removeEmptyPairs();
-        if(!repeated) newContent = Remove.md(newContent, symbol, true);
+        if(!repeated) {
+            if(symbol.tag === "blockquote") removeEmptyPairs();
+            newContent = Remove.md(newContent, symbol, true);
+        }
 
         const parseMethods = {...Parse};
         const parseMethod = { name: "", function: null };
@@ -122,7 +123,7 @@ export default function getPairFunctions({ content, symbol }) {
         function removeEmptyPairs() {
             newPairs.empty.forEach(pair => {
                 const pairContent = content.substring(pair.start, pair.end);
-                const newPairContent = pairContent.replaceAll(/(?<=\()>\s*<br>|>(?=\)\s*<br>)/gm, "&gt;");
+                const newPairContent = pairContent.replaceAll(/(?<=\()>(?=\s*<br>)|>(?=\)\s*<br>)/gm, "&gt;");
 
                 newContent = newContent.replaceAll(pairContent, newPairContent);
             });

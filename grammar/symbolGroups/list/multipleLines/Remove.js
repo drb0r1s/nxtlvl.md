@@ -2,31 +2,16 @@ const Remove = { md, fakeMd, lastBr, details };
 export default Remove;
 
 function md(content, symbol, isSpecial) {
-    let newContent = "";
+    let newContent = content;
     
     if(isSpecial) {
         const { specialPattern } = getPatterns();
-
-        const lines = content.split("\n");
-        if(!lines[lines.length - 1]) lines.pop();
-    
-        lines.forEach((line, index) => {
-            let newLine = line;
-
-            if(!newLine.match(specialPattern)) return newContent += `${newLine}${index === lines.length - 1 ? "" : "\n"}`;
-            newLine = newLine.replace(specialPattern, "");
-    
-            newContent += `${newLine}${index === lines.length - 1 ? "" : "\n"}`;
-        });
+        newContent = newContent.replaceAll(specialPattern, "");
     }
 
     else {
         const { pattern } = getPatterns();
-
-        let newLine = content;
-        newLine = newLine.replace(pattern, "");
-
-        newContent += newLine;
+        newContent = newContent.replace(pattern, "");
     }
 
     return newContent;
@@ -37,19 +22,19 @@ function md(content, symbol, isSpecial) {
         switch(symbol.tag) {
             case "blockquote":
                 patterns.classic = /(?<=(^[<\s]*|<blockquote class=".+">))((>\s+(?=[<>]))|>)/;
-                patterns.special = /((?<=<blockquote class=".+">)\(>\s*<br>)|((?<=<\/blockquote>)>\)\s*<br>)/;
+                patterns.special = /((?<=<blockquote class=".+">)\(>\s*<br>)|((?<=<\/blockquote>)>\)\s*<br>)/gm;
                 break;
             case "details":
                 patterns.classic = /(?<=(^[>\s]*|<details class=".+">))((<\s+(?=[<>]))|<\s)/;
-                patterns.special = /((?<=<details class=".+">)\(<\s*<br>)|((?<=<\/details>)<\)\s*<br>)/;
+                patterns.special = /((?<=<details class=".+">)\(<\s*<br>)|((?<=<\/details>)<\)\s*<br>)/gm;
                 break;
             case "ol":
             case "ul":
                 const listPatterns = { ol: /^[<>\s]*[0-9]+\.\s(?!\s*<br>)/, ul: /^[<>\s]*[*+-]\s(?!\s*<br>)/ };
 
                 const specialListPatterns = {
-                    ol: /((?<=<ol class=".+">)\([0-9]+\.\s*<br>)|((?<=<\/ol>)[0-9]+\.\)\s*<br>)/,
-                    ul: /((?<=<ul class=".+">)\([*+-]\s*<br>)|((?<=<\/ul>)[*+-]\)\s*<br>)/
+                    ol: /((?<=<ol class=".+">)\([0-9]+\.\s*<br>)|((?<=<\/ol>)[0-9]+\.\)\s*<br>)/gm,
+                    ul: /((?<=<ul class=".+">)\([*+-]\s*<br>)|((?<=<\/ul>)[*+-]\)\s*<br>)/gm
                 };
 
                 patterns.classic = symbol.tag === "ol" ? listPatterns.ol : listPatterns.ul;

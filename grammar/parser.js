@@ -8,7 +8,7 @@ export default function parser(content) {
     whitespacesConfig();
     parsedContent = parseSymbolGroups(parsedContent);
 
-    parsedContent = parsedContent.replaceAll("<br>\n", "<br>");
+    parsedContent = parsedContent.replaceAll("\n", "");
     
     return parsedContent;
 
