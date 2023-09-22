@@ -52,17 +52,9 @@ export default function spaceFix(pairContent, symbol) {
         const asciiCase = { opened: "<pre class=\"nxtlvl one-line pre @\">", closed: "</pre>" };
         const ascii = { opened: noMdLine.startsWith(asciiCase.opened), closed: noMdLine.includes(asciiCase.closed) };
     
-        /*if(ascii.opened && !asciiStatus) {
-            summaryContent = `${tags.opened}${noMdLine}`;
-            asciiStatus = true;
-        }
-    
-        else if(ascii.closed && asciiStatus) {
-            summaryContent = `${noMdLine}${tags.closed}`;
-            asciiStatus = false;
-        }*/
-    
-        summaryContent = !index ? `${tags.opened}${noMdLine}${tags.closed}` : noMdLine;
+        if(ascii.opened) summaryContent = `${tags.opened}${noMdLine}`;
+        else if(ascii.closed) summaryContent = `${noMdLine}${tags.closed}`;
+        else summaryContent = !index ? `${tags.opened}${noMdLine}${tags.closed}` : noMdLine;
     
         return summaryContent;
     }

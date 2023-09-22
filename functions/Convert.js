@@ -72,7 +72,7 @@ function toASCII(string, multipleLinesCase) {
             }
         }
 
-        ascii.string += "\n";
+        ascii.string += "<br>\n";
     }
     
     return ascii.string;
